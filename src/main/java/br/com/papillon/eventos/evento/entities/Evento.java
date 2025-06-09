@@ -1,18 +1,14 @@
 package br.com.papillon.eventos.evento.entities;
 
 import br.com.papillon.eventos.evento.dtos.EventoCreateDto;
-import br.com.papillon.eventos.evento.dtos.EventoShowDto;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.util.Set;
 import java.util.List;
 
 import br.com.papillon.eventos.insumos.entities.Insumo;
-import br.com.papillon.eventos.pessoal.entities.Pessoal;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
