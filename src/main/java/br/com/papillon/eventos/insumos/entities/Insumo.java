@@ -1,21 +1,19 @@
 package br.com.papillon.eventos.insumos.entities;
 
+import java.math.BigDecimal;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import lombok.*;
 
 import br.com.papillon.eventos.evento.entities.Evento;
-import br.com.papillon.eventos.insumos.dtos.InsumoDto;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import br.com.papillon.eventos.insumos.dtos.InsumoDto;
+import br.com.papillon.eventos.metodoDePagamento.entities.MetodoPagamento;
 
 @Entity
-@Table(name = "insumo")
+@Table(name = "insumos")
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,29 +24,25 @@ public class Insumo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
+    @NotBlank
+    @Size(max = 100)
     private String nome;
 
-    @Column(nullable = false)
-    private Integer quantidade;
+    @NotNull
+    private BigDecimal valor;
 
-    @Column(nullable = false)
-    private BigDecimal preco;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "metodo_pagamento_id")
+    private MetodoPagamento metodoPagamento;
 
-    @Column(nullable = false)
-    private String metodoPagamento;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "evento_id", nullable = false)
-    @JsonBackReference
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "evento_id")
     private Evento evento;
 
-
-    public Insumo(InsumoDto dto, Evento evento) {
-        this.nome = dto.nome();
-        this.quantidade = dto.quantidade();
-        this.preco = dto.preco();
-        this.metodoPagamento = dto.metodoPagamento();
+    public Insumo(String nome, BigDecimal valor, MetodoPagamento metodoPagamento, Evento evento) {
+        this.nome = nome;
+        this.valor = valor;
+        this.metodoPagamento = metodoPagamento;
         this.evento = evento;
     }
 }

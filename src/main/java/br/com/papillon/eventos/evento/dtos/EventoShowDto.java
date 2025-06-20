@@ -26,7 +26,7 @@ public class EventoShowDto {
     private List<InsumoDto> insumos;
 
 
-    public EventoShowDto(Evento evento, List<Insumo> insumos) {
+    public EventoShowDto(Evento evento, List<br.com.papillon.eventos.insumos.entities.Insumo> insumos) {
         this.id = evento.getId();
         this.nome = evento.getNome();
         this.contratante = evento.getContratante();

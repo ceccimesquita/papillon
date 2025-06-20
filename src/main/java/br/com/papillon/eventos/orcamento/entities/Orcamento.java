@@ -55,12 +55,12 @@ public class Orcamento {
     private Set<Cardapio> cardapios;*/
 
 
-    @OneToMany(
-            mappedBy = "orcamento",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<Funcionario> funcionarios;
+    //@OneToMany(
+      //      mappedBy = "orcamento",
+     //       cascade = CascadeType.ALL,
+    //        orphanRemoval = true
+    //)
+    //private List<Funcionario> funcionarios;
 
 
     @NotNull
@@ -73,9 +73,9 @@ public class Orcamento {
         this.valorPorPessoa = dto.valorPorPessoa();
         this.valorTotal = dto.valorTotal();
         //this.cardapios = dto.cardapios();
-        this.funcionarios = dto.funcionarios().stream()
-                .map(Funcionario::new)                     // usa o construtor acima
-                .collect(Collectors.toList());
+        //this.funcionarios = dto.funcionarios().stream()
+          //      .map(Funcionario::new)                     // usa o construtor acima
+            //    .collect(Collectors.toList());
         this.isEvento = dto.isEvento();
     }
 }

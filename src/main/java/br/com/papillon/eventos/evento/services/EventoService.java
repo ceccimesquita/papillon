@@ -18,8 +18,6 @@ public class EventoService {
     @Autowired
     private EventoRepository eventoRepository;
 
-    @Autowired
-    private EventoCalculadora eventoCalculadora;
 
     public Evento createEvento(EventoCreateDto eventoDto) {
         try {
@@ -55,7 +53,6 @@ public class EventoService {
     }
 
     public void recalcularGastosELucro(Evento evento) {
-        eventoCalculadora.calcularGastosELucro(evento);
         eventoRepository.save(evento);
     }
 
@@ -91,7 +88,6 @@ public class EventoService {
     }
 
     public void recalcularGastosELucroEGravar(Evento evento) {
-        eventoCalculadora.calcularGastosELucro(evento);
         eventoRepository.save(evento);
     }
 }

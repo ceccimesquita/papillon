@@ -1,17 +1,19 @@
 package br.com.papillon.eventos.insumos.services;
 
-import br.com.papillon.eventos.evento.entities.Evento;
-import br.com.papillon.eventos.evento.repositories.EventoRepository;
-import br.com.papillon.eventos.evento.services.EventoService;
-import br.com.papillon.eventos.insumos.dtos.InsumoDto;
-import br.com.papillon.eventos.insumos.entities.Insumo;
-import br.com.papillon.eventos.insumos.repositories.InsumoRepository;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
-import java.util.List;
-import java.util.stream.Collectors;
+import br.com.papillon.eventos.insumos.dtos.InsumoDto;
+import br.com.papillon.eventos.insumos.entities.Insumo;
+import br.com.papillon.eventos.insumos.exceptions.InsumoNotFoundException;
+import br.com.papillon.eventos.insumos.repositories.InsumoRepository;
+import br.com.papillon.eventos.metodoDePagamento.entities.MetodoPagamento;
+import br.com.papillon.eventos.metodoDePagamento.repositories.MetodoPagamentoRepository;
+import br.com.papillon.eventos.evento.entities.Evento;
+import br.com.papillon.eventos.evento.repositories.EventoRepository;
 
 @Service
 public class InsumoService {
@@ -20,78 +22,66 @@ public class InsumoService {
     private InsumoRepository insumoRepository;
 
     @Autowired
-    private EventoRepository eventoRepository;
+    private MetodoPagamentoRepository metodoPagamentoRepository;
 
     @Autowired
-    private EventoService eventoService;
+    private EventoRepository eventoRepository;
 
-    public List<InsumoDto> listarTodos() {
+    public Insumo createInsumo(InsumoDto dto) {
+        MetodoPagamento mp = metodoPagamentoRepository.findById(dto.metodoPagamento().id())
+                .orElseThrow(() -> new RuntimeException("Método de pagamento com ID "
+                        + dto.metodoPagamento().id() + " não encontrado"));
+        Evento ev = eventoRepository.findById(dto.eventoId())
+                .orElseThrow(() -> new RuntimeException("Evento com ID "
+                        + dto.eventoId() + " não encontrado"));
+
+        Insumo novo = new Insumo(
+                dto.nome(),
+                dto.valor(),
+                mp,
+                ev
+        );
+        return insumoRepository.save(novo);
+    }
+
+    public List<InsumoDto> listAllInsumos() {
         return insumoRepository.findAll().stream()
                 .map(InsumoDto::new)
                 .collect(Collectors.toList());
     }
 
-    public InsumoDto buscarPorId(Long id) {
+    public InsumoDto getInsumoById(Long id) {
         Insumo insumo = insumoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Insumo não encontrado"));
+                .orElseThrow(() -> new InsumoNotFoundException(id));
         return new InsumoDto(insumo);
     }
 
-    public InsumoDto criar(InsumoDto dto) {
-        Evento evento = eventoRepository.findById(dto.eventoId())
-                .orElseThrow(() -> new RuntimeException("Evento não encontrado"));
+    public InsumoDto updateInsumoById(Long id, InsumoDto dto) {
+        insumoRepository.findById(id)
+                .orElseThrow(() -> new InsumoNotFoundException(id));
 
-        Insumo insumo = new Insumo(dto, evento);
-        insumo = insumoRepository.save(insumo);
+        MetodoPagamento mp = metodoPagamentoRepository.findById(dto.metodoPagamento().id())
+                .orElseThrow(() -> new RuntimeException("Método de pagamento com ID "
+                        + dto.metodoPagamento().id() + " não encontrado"));
+        Evento ev = eventoRepository.findById(dto.eventoId())
+                .orElseThrow(() -> new RuntimeException("Evento com ID "
+                        + dto.eventoId() + " não encontrado"));
 
-
-        Evento eventoAtualizado = eventoRepository.findById(evento.getId())
-                .orElseThrow(() -> new RuntimeException("Evento não encontrado"));
-
-        eventoService.recalcularGastosELucroEGravar(eventoAtualizado);
-
-        return new InsumoDto(insumo);
+        Insumo atualizado = new Insumo(
+                dto.nome(),
+                dto.valor(),
+                mp,
+                ev
+        );
+        atualizado.setId(id);
+        insumoRepository.save(atualizado);
+        return new InsumoDto(atualizado);
     }
 
-
-
-    public InsumoDto atualizar(Long id, InsumoDto dto) {
-        Insumo insumo = insumoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Insumo não encontrado"));
-
-        // Atualiza os dados do insumo
-        insumo.setNome(dto.nome());
-        insumo.setQuantidade(dto.quantidade());
-        insumo.setPreco(dto.preco());
-        insumo.setMetodoPagamento(dto.metodoPagamento());
-
-        // Se mudou o evento associado, atualiza também
-        if (!insumo.getEvento().getId().equals(dto.eventoId())) {
-            Evento novoEvento = eventoRepository.findById(dto.eventoId())
-                    .orElseThrow(() -> new RuntimeException("Evento não encontrado"));
-            insumo.setEvento(novoEvento);
+    public void deleteInsumoById(Long id) {
+        if (!insumoRepository.existsById(id)) {
+            throw new InsumoNotFoundException(id);
         }
-
-        // Salva insumo atualizado
-        Insumo insumoAtualizado = insumoRepository.save(insumo);
-
-        // Recalcula e grava os gastos/lucro no evento
-        eventoService.recalcularGastosELucroEGravar(insumoAtualizado.getEvento());
-
-        return new InsumoDto(insumoAtualizado);
-    }
-
-    public void deletar(Long id) {
-        Insumo insumo = insumoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Insumo não encontrado"));
-
-        Evento evento = insumo.getEvento();
-
-        // Remove insumo do banco
-        insumoRepository.delete(insumo);
-
-        // Recalcula e grava os gastos/lucro do evento afetado
-        eventoService.recalcularGastosELucroEGravar(evento);
+        insumoRepository.deleteById(id);
     }
 }
-

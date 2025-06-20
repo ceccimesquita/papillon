@@ -20,7 +20,7 @@ public record OrcamentoDto(
         @NotNull BigDecimal valorPorPessoa,
         @NotNull BigDecimal valorTotal,
         //Set<CardapioDto> cardapios,
-        List<FuncionarioDto> funcionarios,
+        //List<FuncionarioDto> funcionarios,
         @NotNull Boolean isEvento
 ) {
     public OrcamentoDto(Orcamento orcamento) {
@@ -31,9 +31,9 @@ public record OrcamentoDto(
                 orcamento.getValorPorPessoa(),
                 orcamento.getValorTotal(),
                 //orcamento.getCardapios().stream().map(CardapioDto::new).collect(Collectors.toSet()),
-                orcamento.getFuncionarios().stream()
-                        .map(FuncionarioDto::new)
-                        .collect(Collectors.toList()),
+                //orcamento.getFuncionarios().stream()
+                  //      .map(FuncionarioDto::new)
+                    //    .collect(Collectors.toList()),
                 orcamento.getIsEvento()
         );
     }

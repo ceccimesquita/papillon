@@ -1,23 +1,37 @@
 package br.com.papillon.eventos.insumos.dtos;
 
-import br.com.papillon.eventos.insumos.entities.Insumo;
-
 import java.math.BigDecimal;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import br.com.papillon.eventos.insumos.entities.Insumo;
+import br.com.papillon.eventos.metodoDePagamento.dtos.MetodoPagamentoDto;
+
 public record InsumoDto(
+        Long id,
+
+        @NotBlank
+        @Size(max = 100)
         String nome,
-        Integer quantidade,
-        BigDecimal preco,
-        String metodoPagamento,
+
+        @NotNull
+        BigDecimal valor,
+
+        @NotNull
+        MetodoPagamentoDto metodoPagamento,
+
+        @NotNull
         Long eventoId
 ) {
     public InsumoDto(Insumo insumo) {
         this(
+                insumo.getId(),
                 insumo.getNome(),
-                insumo.getQuantidade(),
-                insumo.getPreco(),
-                insumo.getMetodoPagamento(),
-                insumo.getEvento() != null ? insumo.getEvento().getId() : null
+                insumo.getValor(),
+                new MetodoPagamentoDto(insumo.getMetodoPagamento()),
+                insumo.getEvento().getId()
         );
     }
 }
