@@ -4,13 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
-import br.com.papillon.eventos.insumos.entities.Insumo;
-import br.com.papillon.eventos.insumos.repositories.InsumoRepository;
-import br.com.papillon.eventos.funcionario.entities.Funcionario;
-import br.com.papillon.eventos.funcionario.repositories.FuncionarioRepository;
 import br.com.papillon.eventos.metodoDePagamento.dtos.MetodoPagamentoDto;
 import br.com.papillon.eventos.metodoDePagamento.entities.MetodoPagamento;
 import br.com.papillon.eventos.metodoDePagamento.exceptions.MetodoPagamentoNotFoundException;
@@ -22,48 +17,17 @@ public class MetodoPagamentoService {
     @Autowired
     private MetodoPagamentoRepository pagamentoRepository;
 
-    @Autowired
-    private InsumoRepository insumoRepository;
-
-    @Autowired
-    private FuncionarioRepository funcionarioRepository;
-
-    // RECEBE e RETORNA DTO
     public MetodoPagamentoDto create(MetodoPagamentoDto dto) {
-        try {
-            Insumo insumo = dto.insumoId() != null
-                    ? insumoRepository.findById(dto.insumoId())
-                    .orElseThrow(() -> new RuntimeException("Insumo não encontrado: " + dto.insumoId()))
-                    : null;
-
-            Funcionario func = dto.funcionarioId() != null
-                    ? funcionarioRepository.findById(dto.funcionarioId())
-                    .orElseThrow(() -> new RuntimeException("Funcionário não encontrado: " + dto.funcionarioId()))
-                    : null;
-
-            MetodoPagamento mp = new MetodoPagamento(
-                    null,                // id será gerado
-                    dto.nome(),
-                    dto.valor(),
-                    dto.data(),
-                    insumo,
-                    func
-            );
-            mp = pagamentoRepository.save(mp);
-            return new MetodoPagamentoDto(mp);
-        } catch (DataAccessException dae) {
-            throw new RuntimeException("Erro ao criar Método de Pagamento", dae);
-        }
+        // Constrói a entidade a partir do DTO e salva
+        MetodoPagamento mp = new MetodoPagamento(dto);
+        MetodoPagamento salvo = pagamentoRepository.save(mp);
+        return new MetodoPagamentoDto(salvo);
     }
 
     public List<MetodoPagamentoDto> listAll() {
-        try {
-            return pagamentoRepository.findAll().stream()
-                    .map(MetodoPagamentoDto::new)
-                    .collect(Collectors.toList());
-        } catch (DataAccessException dae) {
-            throw new RuntimeException("Erro ao listar Métodos de Pagamento", dae);
-        }
+        return pagamentoRepository.findAll().stream()
+                .map(MetodoPagamentoDto::new)
+                .collect(Collectors.toList());
     }
 
     public MetodoPagamentoDto getById(Long id) {
@@ -72,30 +36,15 @@ public class MetodoPagamentoService {
         return new MetodoPagamentoDto(mp);
     }
 
-    // ASSINATURA AJUSTADA: retorna DTO
     public MetodoPagamentoDto update(Long id, MetodoPagamentoDto dto) {
-        pagamentoRepository.findById(id)
+        // Busca o existente ou lança 404
+        MetodoPagamento existente = pagamentoRepository.findById(id)
                 .orElseThrow(() -> new MetodoPagamentoNotFoundException(id));
-
-        Insumo insumo = dto.insumoId() != null
-                ? insumoRepository.findById(dto.insumoId())
-                .orElseThrow(() -> new RuntimeException("Insumo não encontrado: " + dto.insumoId()))
-                : null;
-
-        Funcionario func = dto.funcionarioId() != null
-                ? funcionarioRepository.findById(dto.funcionarioId())
-                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado: " + dto.funcionarioId()))
-                : null;
-
-        MetodoPagamento atualizado = new MetodoPagamento(
-                id,
-                dto.nome(),
-                dto.valor(),
-                dto.data(),
-                insumo,
-                func
-        );
-        atualizado = pagamentoRepository.save(atualizado);
+        // Atualiza campos
+        existente.setNome(dto.nome());
+        existente.setValor(dto.valor());
+        existente.setData(dto.data());
+        MetodoPagamento atualizado = pagamentoRepository.save(existente);
         return new MetodoPagamentoDto(atualizado);
     }
 

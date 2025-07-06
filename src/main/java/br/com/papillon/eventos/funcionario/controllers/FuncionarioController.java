@@ -1,59 +1,48 @@
 package br.com.papillon.eventos.funcionario.controllers;
 
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.http.ResponseEntity;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 import br.com.papillon.eventos.funcionario.dtos.FuncionarioDto;
-import br.com.papillon.eventos.funcionario.entities.Funcionario;
 import br.com.papillon.eventos.funcionario.services.FuncionarioService;
 
 @RestController
 @RequestMapping("/api/funcionarios")
 public class FuncionarioController {
 
-    @Autowired
-    private FuncionarioService funcionarioService;
+    private final FuncionarioService service;
 
-    // Criar novo funcionário
-    @PostMapping
-    public ResponseEntity<Funcionario> createFuncionario(@RequestBody @Valid FuncionarioDto dto) {
-        Funcionario criado = funcionarioService.createFuncionario(dto);
-        return ResponseEntity.ok(criado);
+    public FuncionarioController(FuncionarioService service) {
+        this.service = service;
     }
 
-    // Listar todos os funcionários
+    @PostMapping("/register")
+    public ResponseEntity<FuncionarioDto> createFuncionario(@Valid @RequestBody FuncionarioDto dto) {
+        return ResponseEntity.ok(service.createFuncionario(dto));
+    }
+
     @GetMapping
-    public ResponseEntity<List<FuncionarioDto>> listAllFuncionarios() {
-        List<FuncionarioDto> lista = funcionarioService.listAllFuncionarios();
-        return ResponseEntity.ok(lista);
+    public ResponseEntity<List<FuncionarioDto>> listAll() {
+        return ResponseEntity.ok(service.listAllFuncionarios());
     }
 
-    // Obter funcionário por ID
     @GetMapping("/{id}")
-    public ResponseEntity<FuncionarioDto> getFuncionarioById(@PathVariable Long id) {
-        FuncionarioDto dto = funcionarioService.getFuncionarioById(id);
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<FuncionarioDto> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getFuncionarioById(id));
     }
 
-    // Atualizar funcionário por ID
     @PutMapping("/{id}")
-    public ResponseEntity<FuncionarioDto> updateFuncionarioById(
-            @PathVariable @NotNull Long id,
-            @RequestBody @Valid FuncionarioDto dto) {
-        FuncionarioDto atualizado = funcionarioService.updateFuncionarioById(id, dto);
-        return ResponseEntity.ok(atualizado);
+    public ResponseEntity<FuncionarioDto> update(
+            @PathVariable Long id,
+            @Valid @RequestBody FuncionarioDto dto) {
+        return ResponseEntity.ok(service.updateFuncionarioById(id, dto));
     }
 
-    // Excluir funcionário por ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteFuncionarioById(@PathVariable Long id) {
-        funcionarioService.deleteFuncionarioById(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.deleteFuncionarioById(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -26,6 +26,7 @@ import br.com.papillon.eventos.funcionario.dtos.FuncionarioDto;
 @AllArgsConstructor
 public class Orcamento {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -46,21 +47,12 @@ public class Orcamento {
     @NotNull
     private BigDecimal valorTotal;
 
-    /*@ManyToMany
-    @JoinTable(
-            name = "orcamento_cardapios",
-            joinColumns = @JoinColumn(name = "orcamento_id"),
-            inverseJoinColumns = @JoinColumn(name = "cardapio_id")
-    )
-    private Set<Cardapio> cardapios;*/
-
-
-    //@OneToMany(
-      //      mappedBy = "orcamento",
-     //       cascade = CascadeType.ALL,
-    //        orphanRemoval = true
-    //)
-    //private List<Funcionario> funcionarios;
+//    @OneToMany(
+//            mappedBy = "orcamento",
+//            cascade = CascadeType.ALL,
+//            orphanRemoval = true
+//    )
+//    private List<Funcionario> funcionarios;
 
 
     @NotNull
@@ -72,10 +64,8 @@ public class Orcamento {
         this.quantidadePessoas = dto.quantidadePessoas();
         this.valorPorPessoa = dto.valorPorPessoa();
         this.valorTotal = dto.valorTotal();
-        //this.cardapios = dto.cardapios();
-        //this.funcionarios = dto.funcionarios().stream()
-          //      .map(Funcionario::new)                     // usa o construtor acima
-            //    .collect(Collectors.toList());
+//        this.funcionarios = dto.funcionarios().stream()
+//                .map(funcDto -> new Funcionario(funcDto, this));
         this.isEvento = dto.isEvento();
     }
 }

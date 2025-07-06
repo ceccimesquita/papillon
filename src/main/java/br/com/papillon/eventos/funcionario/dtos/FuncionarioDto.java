@@ -1,23 +1,17 @@
 package br.com.papillon.eventos.funcionario.dtos;
 
 import java.math.BigDecimal;
-
+import jakarta.validation.constraints.*;
 import br.com.papillon.eventos.metodoDePagamento.dtos.MetodoPagamentoDto;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
 import br.com.papillon.eventos.funcionario.entities.Funcionario;
 
 public record FuncionarioDto(
         Long id,
 
-        @NotBlank
-        @Size(max = 100)
+        @NotBlank @Size(max = 100)
         String nome,
 
-        @NotBlank
-        @Size(max = 100)
+        @NotBlank @Size(max = 100)
         String funcao,
 
         @NotNull
@@ -29,14 +23,14 @@ public record FuncionarioDto(
         @NotNull
         Long eventoId
 ) {
-    public FuncionarioDto(Funcionario funcionario) {
+    public FuncionarioDto(Funcionario f) {
         this(
-                funcionario.getId(),
-                funcionario.getNome(),
-                funcionario.getFuncao(),
-                funcionario.getValor(),
-                new MetodoPagamentoDto(funcionario.getMetodoPagamento()),
-                funcionario.getEvento().getId()
+                f.getId(),
+                f.getNome(),
+                f.getFuncao(),
+                f.getValor(),
+                new MetodoPagamentoDto(f.getMetodoPagamento()),
+                f.getEvento().getId()
         );
     }
 }

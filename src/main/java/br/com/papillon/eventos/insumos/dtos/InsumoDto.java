@@ -20,7 +20,7 @@ public record InsumoDto(
         BigDecimal valor,
 
         @NotNull
-        MetodoPagamentoDto metodoPagamento,
+        MetodoPagamentoDto metodoPagamento,  // agora é o objeto inteiro
 
         @NotNull
         Long eventoId

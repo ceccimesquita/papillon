@@ -31,9 +31,9 @@ public record OrcamentoDto(
                 orcamento.getValorPorPessoa(),
                 orcamento.getValorTotal(),
                 //orcamento.getCardapios().stream().map(CardapioDto::new).collect(Collectors.toSet()),
-                //orcamento.getFuncionarios().stream()
-                  //      .map(FuncionarioDto::new)
-                    //    .collect(Collectors.toList()),
+//                orcamento.getFuncionarios().stream()
+//                        .map(FuncionarioDto::new)
+//                        .collect(Collectors.toList()),
                 orcamento.getIsEvento()
         );
     }

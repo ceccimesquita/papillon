@@ -3,6 +3,7 @@ package br.com.papillon.eventos.metodoDePagamento.entities;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import br.com.papillon.eventos.metodoDePagamento.dtos.MetodoPagamentoDto;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -25,8 +26,7 @@ public class MetodoPagamento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank @Size(max = 100)
     private String nome;
 
     @NotNull
@@ -35,11 +35,10 @@ public class MetodoPagamento {
     @NotNull
     private LocalDate data;
 
-    @ManyToOne(optional = true)
-    @JoinColumn(name = "insumo_id")
-    private Insumo insumo;
-
-    @ManyToOne(optional = true)
-    @JoinColumn(name = "funcionario_id")
-    private Funcionario funcionario;
+    // **não** precisa do insumo aqui, é unidirecional
+    public MetodoPagamento(MetodoPagamentoDto dto) {
+        this.nome  = dto.nome();
+        this.valor = dto.valor();
+        this.data  = dto.data();
+    }
 }

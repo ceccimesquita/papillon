@@ -21,11 +21,13 @@ public class InsumoController {
     private InsumoService insumoService;
 
     // Criar novo insumo
-    @PostMapping
-    public ResponseEntity<Insumo> createInsumo(@RequestBody @Valid InsumoDto dto) {
+    // Controller
+    @PostMapping("/register")
+    public ResponseEntity<InsumoDto> createInsumo(@RequestBody @Valid InsumoDto dto) {
         Insumo criado = insumoService.createInsumo(dto);
-        return ResponseEntity.ok(criado);
+        return ResponseEntity.ok(new InsumoDto(criado));
     }
+
 
     // Listar todos os insumos
     @GetMapping
@@ -56,4 +58,5 @@ public class InsumoController {
         insumoService.deleteInsumoById(id);
         return ResponseEntity.noContent().build();
     }
+
 }
