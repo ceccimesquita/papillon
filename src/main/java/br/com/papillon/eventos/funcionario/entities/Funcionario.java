@@ -1,72 +1,49 @@
 package br.com.papillon.eventos.funcionario.entities;
 
 import java.math.BigDecimal;
-
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import br.com.papillon.eventos.evento.entities.Evento;
 import br.com.papillon.eventos.metodoDePagamento.entities.MetodoPagamento;
 import br.com.papillon.eventos.funcionario.dtos.FuncionarioDto;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
 @Entity
 @Table(name = "funcionarios")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class Funcionario {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank @Size(max = 100)
     private String nome;
 
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank @Size(max = 100)
     private String funcao;
 
     @NotNull
     private BigDecimal valor;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "metodo_pagamento_id")
+    // 1-1 unidirecional: o Funcionario “conhece” seu MetodoPagamento
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "metodo_pagamento_id", nullable = false)
     private MetodoPagamento metodoPagamento;
 
+    // Muitos funcionários para um evento.
+    // JsonIgnoreProperties quebra o laço (não serializa evento.funcionarios)
     @ManyToOne(optional = false)
     @JoinColumn(name = "evento_id")
+    @JsonIgnoreProperties("funcionarios")
     private Evento evento;
 
-    public Funcionario(
-            @NotBlank @Size(max = 100) String nome,
-            @NotBlank @Size(max = 100) String funcao,
-            @NotNull BigDecimal valor,
-            MetodoPagamento metodoPagamento,
-            Evento evento) {
-        this.nome = nome;
-        this.funcao = funcao;
-        this.valor = valor;
-        this.metodoPagamento = metodoPagamento;
-        this.evento = evento;
-    }
-
-    public Funcionario(FuncionarioDto dto) {
-        this(
-                dto.nome(),
-                dto.funcao(),
-                dto.valor(),
-                null,
-                null
-        );
+    // Construtor a partir de DTO + evento carregado do banco
+    public Funcionario(FuncionarioDto dto, Evento ev) {
+        this.nome            = dto.nome();
+        this.funcao          = dto.funcao();
+        this.valor           = dto.valor();
+        this.metodoPagamento = new MetodoPagamento(dto.metodoPagamento());
+        this.evento          = ev;
     }
 }

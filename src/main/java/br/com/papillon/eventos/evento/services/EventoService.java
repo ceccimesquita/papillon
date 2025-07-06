@@ -1,8 +1,11 @@
 package br.com.papillon.eventos.evento.services;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import br.com.papillon.eventos.cliente.entities.Cliente;
+import br.com.papillon.eventos.cliente.repositories.ClienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +14,7 @@ import br.com.papillon.eventos.evento.dtos.EventoShowDto;
 import br.com.papillon.eventos.evento.entities.Evento;
 import br.com.papillon.eventos.evento.exception.EventoNotFoundException;
 import br.com.papillon.eventos.evento.repositories.EventoRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EventoService {
@@ -18,76 +22,63 @@ public class EventoService {
     @Autowired
     private EventoRepository eventoRepository;
 
+    @Autowired
+    private ClienteRepository clienteRepository;
 
-    public Evento createEvento(EventoCreateDto eventoDto) {
-        try {
-            Evento evento = new Evento(eventoDto);
-            return eventoRepository.save(evento);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao salvar evento: " + e.getMessage());
-        }
+    // Cria e retorna o DTO de exibição completo
+    public EventoShowDto createEvento(EventoCreateDto dto) {
+        Cliente cliente = clienteRepository
+                .findById(dto.clienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado: " + dto.clienteId()));
+
+        // Construtor ajustado já inicializa gastos, lucro, insumos e funcionários
+        Evento novo = new Evento(dto, cliente);
+
+        Evento salvo = eventoRepository.save(novo);
+        return new EventoShowDto(salvo);
     }
 
-    public List<EventoShowDto> listarTodos() {
-        try {
-            List<Evento> eventos = eventoRepository.findAll();
-            return eventos.stream()
-                    .map(evento -> new EventoShowDto(evento, evento.getInsumos()))
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao listar eventos: " + e.getMessage());
-        }
+    public List<EventoShowDto> listAllEventos() {
+        return eventoRepository.findAll()
+                .stream()
+                .map(EventoShowDto::new)
+                .collect(Collectors.toList());
     }
 
     public EventoShowDto getEventoById(Long id) {
-        try {
-            Evento evento = eventoRepository.findById(id)
-                    .orElseThrow(() -> new EventoNotFoundException(id));
-            return new EventoShowDto(evento, evento.getInsumos());
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao buscar evento por ID: " + e.getMessage());
-        }
+        Evento ev = eventoRepository.findById(id)
+                .orElseThrow(() -> new EventoNotFoundException(id));
+        return new EventoShowDto(ev);
     }
 
-    public void recalcularGastosELucro(Evento evento) {
-        eventoRepository.save(evento);
+    @Transactional
+    public EventoShowDto updateEvento(Long id, EventoCreateDto dto) {
+        Evento existente = eventoRepository.findById(id)
+                .orElseThrow(() -> new EventoNotFoundException(id));
+
+        Cliente cliente = clienteRepository.findById(dto.clienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado: " + dto.clienteId()));
+
+        // aplica as alterações
+        existente.setNome(dto.nome());
+        existente.setCliente(cliente);
+        existente.setData(dto.data());
+        existente.setValor(dto.valor());
+        // gastos, lucro e coleções (insumos, funcionários) permanecem intactos
+
+        Evento salvo = eventoRepository.save(existente);
+        return new EventoShowDto(salvo);
     }
 
-    public EventoCreateDto updateEvento(Long id, EventoCreateDto eventoDto) {
-        try {
-            Evento evento = eventoRepository.findById(id)
-                    .orElseThrow(() -> new EventoNotFoundException(id));
-
-            evento.setNome(eventoDto.nome());
-            evento.setContratante(eventoDto.contratante());
-            evento.setData(eventoDto.data());
-            evento.setValor(eventoDto.valor());
-
-            eventoRepository.save(evento);
-
-            return new EventoCreateDto(evento);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao atualizar evento: " + e.getMessage());
-        }
-    }
-
+    /**
+     * Remove um evento pelo ID.
+     */
+    @Transactional
     public void deleteEvento(Long id) {
-        try {
-            if (!eventoRepository.existsById(id)) {
-                throw new EventoNotFoundException(id);
-            }
-            eventoRepository.deleteById(id);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao deletar evento: " + e.getMessage());
+        if (!eventoRepository.existsById(id)) {
+            throw new EventoNotFoundException(id);
         }
-    }
-
-    public void recalcularGastosELucroEGravar(Evento evento) {
-        eventoRepository.save(evento);
+        eventoRepository.deleteById(id);
     }
 }
+

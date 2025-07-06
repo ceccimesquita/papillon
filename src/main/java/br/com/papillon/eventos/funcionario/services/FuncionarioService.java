@@ -2,94 +2,72 @@ package br.com.papillon.eventos.funcionario.services;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import br.com.papillon.eventos.funcionario.dtos.FuncionarioDto;
 import br.com.papillon.eventos.funcionario.entities.Funcionario;
-import br.com.papillon.eventos.funcionario.exception.FuncionarioNotFoundException;
 import br.com.papillon.eventos.funcionario.repositories.FuncionarioRepository;
-
-import br.com.papillon.eventos.metodoDePagamento.entities.MetodoPagamento;
-import br.com.papillon.eventos.metodoDePagamento.repositories.MetodoPagamentoRepository;
-
-import br.com.papillon.eventos.evento.entities.Evento;
 import br.com.papillon.eventos.evento.repositories.EventoRepository;
 
 @Service
 public class FuncionarioService {
 
     @Autowired
-    private FuncionarioRepository funcionarioRepository;
+    private FuncionarioRepository repo;
 
     @Autowired
-    private MetodoPagamentoRepository metodoPagamentoRepository;
+    private EventoRepository eventoRepo;
 
-    @Autowired
-    private EventoRepository eventoRepository;
-
-    public Funcionario createFuncionario(FuncionarioDto dto) {
-        MetodoPagamento mp = metodoPagamentoRepository.findById(dto.metodoPagamento().id())
-                .orElseThrow(() -> new RuntimeException(
-                        "Método de pagamento não encontrado: " + dto.metodoPagamento().id()
-                ));
-        Evento ev = eventoRepository.findById(dto.eventoId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Evento não encontrado: " + dto.eventoId()
-                ));
-
-        Funcionario novo = new Funcionario(
-                dto.nome(),
-                dto.funcao(),
-                dto.valor(),
-                mp,
-                ev
-        );
-        return funcionarioRepository.save(novo);
+    @Transactional
+    public FuncionarioDto createFuncionario(FuncionarioDto dto) {
+        var evento = eventoRepo.findById(dto.eventoId())
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado: " + dto.eventoId()));
+        Funcionario f = new Funcionario(dto, evento);
+        f = repo.save(f);
+        return new FuncionarioDto(f);
     }
 
+    @Transactional(readOnly = true)
     public List<FuncionarioDto> listAllFuncionarios() {
-        return funcionarioRepository.findAll().stream()
+        return repo.findAll().stream()
                 .map(FuncionarioDto::new)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public FuncionarioDto getFuncionarioById(Long id) {
-        Funcionario func = funcionarioRepository.findById(id)
-                .orElseThrow(() -> new FuncionarioNotFoundException(id));
-        return new FuncionarioDto(func);
+        var f = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado: " + id));
+        return new FuncionarioDto(f);
     }
 
+    @Transactional
     public FuncionarioDto updateFuncionarioById(Long id, FuncionarioDto dto) {
-        funcionarioRepository.findById(id)
-                .orElseThrow(() -> new FuncionarioNotFoundException(id));
-
-        MetodoPagamento mp = metodoPagamentoRepository.findById(dto.metodoPagamento().id())
-                .orElseThrow(() -> new RuntimeException(
-                        "Método de pagamento não encontrado: " + dto.metodoPagamento().id()
-                ));
-        Evento ev = eventoRepository.findById(dto.eventoId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Evento não encontrado: " + dto.eventoId()
-                ));
-
-        Funcionario atualizado = new Funcionario(
-                dto.nome(),
-                dto.funcao(),
-                dto.valor(),
-                mp,
-                ev
-        );
-        atualizado.setId(id);
-        funcionarioRepository.save(atualizado);
-        return new FuncionarioDto(atualizado);
+        var existing = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado: " + id));
+        var evento = eventoRepo.findById(dto.eventoId())
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado: " + dto.eventoId()));
+        existing.setNome(dto.nome());
+        existing.setFuncao(dto.funcao());
+        existing.setValor(dto.valor());
+        existing.setEvento(evento);
+        // atualiza só o pagamento vinculado
+        var mp = existing.getMetodoPagamento();
+        var mpDto = dto.metodoPagamento();
+        mp.setNome(mpDto.nome());
+        mp.setValor(mpDto.valor());
+        mp.setData(mpDto.data());
+        existing = repo.save(existing);
+        return new FuncionarioDto(existing);
     }
 
+    @Transactional
     public void deleteFuncionarioById(Long id) {
-        if (!funcionarioRepository.existsById(id)) {
-            throw new FuncionarioNotFoundException(id);
+        if (!repo.existsById(id)) {
+            throw new RuntimeException("Funcionário não encontrado: " + id);
         }
-        funcionarioRepository.deleteById(id);
+        repo.deleteById(id);
     }
 }

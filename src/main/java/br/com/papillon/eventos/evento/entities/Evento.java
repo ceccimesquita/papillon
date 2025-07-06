@@ -1,17 +1,20 @@
 package br.com.papillon.eventos.evento.entities;
 
+import br.com.papillon.eventos.cliente.entities.Cliente;
 import br.com.papillon.eventos.evento.dtos.EventoCreateDto;
+import br.com.papillon.eventos.funcionario.entities.Funcionario;
+import br.com.papillon.eventos.insumos.entities.Insumo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.util.List;
-
-import br.com.papillon.eventos.insumos.entities.Insumo;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "evento")
@@ -21,37 +24,48 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class Evento {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Size(max = 150)
-    @NotBlank
+    @NotBlank @Size(max = 150)
     private String nome;
 
-    @Size(max = 150)
-    @NotBlank
-    private String contratante;
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
 
-    @NonNull
+    @NotNull
     private LocalDate data;
 
-    @NonNull
+    @NotNull
     private BigDecimal valor;
 
+    // Esses campos começam em zero / vazios
     private BigDecimal gastos;
-
     private BigDecimal lucro;
 
-    @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<Insumo> insumos;
+    @OneToMany(mappedBy = "evento",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.EAGER)
+    @JsonIgnoreProperties("evento")
+    private List<Insumo> insumos = new ArrayList<>();
 
+    @OneToMany(mappedBy = "evento",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.EAGER)
+    @JsonIgnoreProperties("evento")
+    private List<Funcionario> funcionarios = new ArrayList<>();
 
-
-    public Evento(EventoCreateDto dto) {
-        this.nome = dto.nome();
-        this.contratante = dto.contratante();
-        this.data = dto.data();
-        this.valor = dto.valor();
+    // Construtor para criação a partir do DTO
+    public Evento(EventoCreateDto dto, Cliente cliente) {
+        this.nome     = dto.nome();
+        this.cliente  = cliente;
+        this.data     = dto.data();
+        this.valor    = dto.valor();
+        this.gastos   = BigDecimal.ZERO;
+        this.lucro    = BigDecimal.ZERO;
+        // insumos e funcionarios já instanciados como lista vazia
     }
 }

@@ -3,6 +3,8 @@ package br.com.papillon.eventos.insumos.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import br.com.papillon.eventos.metodoDePagamento.dtos.MetodoPagamentoDto;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,21 +30,14 @@ public class InsumoService {
     private EventoRepository eventoRepository;
 
     public Insumo createInsumo(InsumoDto dto) {
-        MetodoPagamento mp = metodoPagamentoRepository.findById(dto.metodoPagamento().id())
-                .orElseThrow(() -> new RuntimeException("Método de pagamento com ID "
-                        + dto.metodoPagamento().id() + " não encontrado"));
         Evento ev = eventoRepository.findById(dto.eventoId())
-                .orElseThrow(() -> new RuntimeException("Evento com ID "
-                        + dto.eventoId() + " não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado: " + dto.eventoId()));
 
-        Insumo novo = new Insumo(
-                dto.nome(),
-                dto.valor(),
-                mp,
-                ev
-        );
+        Insumo novo = new Insumo(dto, ev);
+        // como cascade=ALL em Insumo.metodoPagamento, o pagamento será salvo junto
         return insumoRepository.save(novo);
     }
+
 
     public List<InsumoDto> listAllInsumos() {
         return insumoRepository.findAll().stream()
@@ -56,29 +51,41 @@ public class InsumoService {
         return new InsumoDto(insumo);
     }
 
+    @Transactional
     public InsumoDto updateInsumoById(Long id, InsumoDto dto) {
-        insumoRepository.findById(id)
+        // 1) Buscar o insumo existente
+        Insumo existente = insumoRepository.findById(id)
                 .orElseThrow(() -> new InsumoNotFoundException(id));
 
-        MetodoPagamento mp = metodoPagamentoRepository.findById(dto.metodoPagamento().id())
-                .orElseThrow(() -> new RuntimeException("Método de pagamento com ID "
-                        + dto.metodoPagamento().id() + " não encontrado"));
+        // 2) Buscar o evento referenciado
         Evento ev = eventoRepository.findById(dto.eventoId())
-                .orElseThrow(() -> new RuntimeException("Evento com ID "
-                        + dto.eventoId() + " não encontrado"));
+                .orElseThrow(() -> new RuntimeException(
+                        "Evento com ID " + dto.eventoId() + " não encontrado"
+                ));
 
-        Insumo atualizado = new Insumo(
-                dto.nome(),
-                dto.valor(),
-                mp,
-                ev
-        );
-        atualizado.setId(id);
-        insumoRepository.save(atualizado);
+        // 3) Atualizar campos do Insumo
+        existente.setNome(dto.nome());
+        existente.setValor(dto.valor());
+        existente.setEvento(ev);
+
+        // 4) Atualizar o Método de Pagamento associado
+        MetodoPagamentoDto mpDto = dto.metodoPagamento();
+        MetodoPagamento mp = existente.getMetodoPagamento();
+        mp.setNome(mpDto.nome());
+        mp.setValor(mpDto.valor());
+        mp.setData(mpDto.data());
+        // (não precisa fazer `mp.setInsumo(existente)` porque usamos @OneToOne com cascade)
+
+        // 5) Salvar tudo (cascade=ALL faz o update do pagamento também)
+        Insumo atualizado = insumoRepository.save(existente);
+
+        // 6) Retornar o DTO atualizado
         return new InsumoDto(atualizado);
     }
 
+    @Transactional
     public void deleteInsumoById(Long id) {
+        System.out.println(">>>> Deletando insumo id=" + id);
         if (!insumoRepository.existsById(id)) {
             throw new InsumoNotFoundException(id);
         }

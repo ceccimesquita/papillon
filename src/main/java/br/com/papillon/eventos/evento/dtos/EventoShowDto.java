@@ -1,41 +1,36 @@
+// para mostrar tudo (inclui listas de insumos e funcionários)
 package br.com.papillon.eventos.evento.dtos;
 
-import br.com.papillon.eventos.evento.entities.Evento;
+import br.com.papillon.eventos.cliente.dtos.ClienteDto;
+import br.com.papillon.eventos.funcionario.dtos.FuncionarioDto;
 import br.com.papillon.eventos.insumos.dtos.InsumoDto;
-import br.com.papillon.eventos.insumos.entities.Insumo;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
-
+import br.com.papillon.eventos.evento.entities.Evento;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
-
-
-@Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class EventoShowDto {
-    private Long id;
-    private String nome;
-    private String contratante;
-    private LocalDate data;
-    private BigDecimal valor;
-    private BigDecimal gastos;
-    private BigDecimal lucro;
-    private List<InsumoDto> insumos;
-
-
-    public EventoShowDto(Evento evento, List<br.com.papillon.eventos.insumos.entities.Insumo> insumos) {
-        this.id = evento.getId();
-        this.nome = evento.getNome();
-        this.contratante = evento.getContratante();
-        this.data = evento.getData();
-        this.valor = evento.getValor();
-        this.gastos = evento.getGastos();
-        this.lucro = evento.getLucro();
-        this.insumos = insumos != null
-                ? insumos.stream().map(insumo -> new InsumoDto(insumo)).collect(Collectors.toList())
-                : null;
+public record EventoShowDto(
+        Long id,
+        String nome,
+        ClienteDto cliente,
+        LocalDate data,
+        BigDecimal valor,
+        BigDecimal gastos,
+        BigDecimal lucro,
+        List<InsumoDto> insumos,
+        List<FuncionarioDto> funcionarios
+) {
+    public EventoShowDto(Evento e) {
+        this(
+                e.getId(),
+                e.getNome(),
+                new ClienteDto(e.getCliente()),
+                e.getData(),
+                e.getValor(),
+                e.getGastos(),
+                e.getLucro(),
+                e.getInsumos().stream().map(InsumoDto::new).toList(),
+                e.getFuncionarios().stream().map(FuncionarioDto::new).toList()
+        );
     }
 }

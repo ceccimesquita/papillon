@@ -4,6 +4,7 @@ import br.com.papillon.eventos.evento.dtos.EventoCreateDto;
 import br.com.papillon.eventos.evento.dtos.EventoShowDto;
 import br.com.papillon.eventos.evento.entities.Evento;
 import br.com.papillon.eventos.evento.services.EventoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,32 +20,41 @@ public class EventoController {
     private EventoService eventoService;
 
     @PostMapping
-    public ResponseEntity<Evento> createEvento(@RequestBody EventoCreateDto eventoDto) {
-        Evento evento = eventoService.createEvento(eventoDto);
-        return new ResponseEntity<>(evento, HttpStatus.CREATED);
+    public ResponseEntity<EventoShowDto> createEvento(
+            @RequestBody @Valid EventoCreateDto eventoDto
+    ) {
+        EventoShowDto criado = eventoService.createEvento(eventoDto);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(criado);
     }
-
+    // GET /api/eventos — lista todos os eventos
     @GetMapping
-    public ResponseEntity<List<EventoShowDto>> listarTodos() {
-        List<EventoShowDto> eventos = eventoService.listarTodos();
-        return ResponseEntity.ok(eventos);
+    public ResponseEntity<List<EventoShowDto>> listAllEventos() {
+        List<EventoShowDto> lista = eventoService.listAllEventos();
+        return ResponseEntity.ok(lista);
     }
 
+    // GET /api/eventos/{id} — busca um evento por ID
     @GetMapping("/{id}")
     public ResponseEntity<EventoShowDto> getEventoById(@PathVariable Long id) {
-        EventoShowDto evento = eventoService.getEventoById(id);
-        return ResponseEntity.ok(evento); // Retorna o evento encontrado com código 200 (OK)
+        EventoShowDto dto = eventoService.getEventoById(id);
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventoCreateDto> updateEvento(@PathVariable Long id, @RequestBody EventoCreateDto eventoDto) {
-        EventoCreateDto eventoAtualizado = eventoService.updateEvento(id, eventoDto);
-        return ResponseEntity.ok(eventoAtualizado); // Retorna o evento atualizado com código 200 (OK)
+    public ResponseEntity<EventoShowDto> updateEvento(
+            @PathVariable Long id,
+            @RequestBody EventoCreateDto dto
+    ) {
+        EventoShowDto atualizado = eventoService.updateEvento(id, dto);
+        return ResponseEntity.ok(atualizado);
     }
 
+    // DELETE /api/eventos/{id} — exclui um evento
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvento(@PathVariable Long id) {
-        eventoService.deleteEvento(id); // Chama o serviço para deletar o evento
-        return ResponseEntity.noContent().build(); // Retorna um código 204 (No Content) indicando sucesso na exclusão
+        eventoService.deleteEvento(id);
+        return ResponseEntity.noContent().build();
     }
 }
