@@ -16,31 +16,34 @@ import br.com.papillon.eventos.evento.exception.EventoNotFoundException;
 import br.com.papillon.eventos.evento.repositories.EventoRepository;
 import org.springframework.transaction.annotation.Transactional;
 
+
+
 @Service
 public class EventoService {
-
     @Autowired
     private EventoRepository eventoRepository;
 
     @Autowired
     private ClienteRepository clienteRepository;
 
-    // Cria e retorna o DTO de exibição completo
     public EventoShowDto createEvento(EventoCreateDto dto) {
-        Cliente cliente = clienteRepository
-                .findById(dto.clienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado: " + dto.clienteId()));
-
-        // Construtor ajustado já inicializa gastos, lucro, insumos e funcionários
+        Cliente cliente = clienteRepository.findById(dto.clienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
         Evento novo = new Evento(dto, cliente);
+        // inicializa explicitamente
+        novo.setGastos(BigDecimal.ZERO);
+        novo.setLucro(BigDecimal.ZERO);
 
         Evento salvo = eventoRepository.save(novo);
+        // não há insumos nem funcionários ainda, mas vamos garantir
+        recalcularGastosELucro(salvo);
         return new EventoShowDto(salvo);
     }
 
     public List<EventoShowDto> listAllEventos() {
         return eventoRepository.findAll()
                 .stream()
+                .peek(this::recalcularGastosELucro)   // recalcula antes de mapear
                 .map(EventoShowDto::new)
                 .collect(Collectors.toList());
     }
@@ -48,6 +51,7 @@ public class EventoService {
     public EventoShowDto getEventoById(Long id) {
         Evento ev = eventoRepository.findById(id)
                 .orElseThrow(() -> new EventoNotFoundException(id));
+        recalcularGastosELucro(ev);
         return new EventoShowDto(ev);
     }
 
@@ -55,30 +59,40 @@ public class EventoService {
     public EventoShowDto updateEvento(Long id, EventoCreateDto dto) {
         Evento existente = eventoRepository.findById(id)
                 .orElseThrow(() -> new EventoNotFoundException(id));
-
         Cliente cliente = clienteRepository.findById(dto.clienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado: " + dto.clienteId()));
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
 
-        // aplica as alterações
         existente.setNome(dto.nome());
         existente.setCliente(cliente);
         existente.setData(dto.data());
         existente.setValor(dto.valor());
-        // gastos, lucro e coleções (insumos, funcionários) permanecem intactos
+        // as listas e gastos/lucro serão atualizados abaixo
 
         Evento salvo = eventoRepository.save(existente);
+        recalcularGastosELucro(salvo);
         return new EventoShowDto(salvo);
     }
 
-    /**
-     * Remove um evento pelo ID.
-     */
     @Transactional
     public void deleteEvento(Long id) {
-        if (!eventoRepository.existsById(id)) {
-            throw new EventoNotFoundException(id);
-        }
+        if (!eventoRepository.existsById(id)) throw new EventoNotFoundException(id);
         eventoRepository.deleteById(id);
+    }
+
+    // --------------------------------------------------------
+    private void recalcularGastosELucro(Evento evento) {
+        BigDecimal somaInsumos = evento.getInsumos().stream()
+                .map(i -> i.getValor())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal somaFuncionarios = evento.getFuncionarios().stream()
+                .map(f -> f.getValor())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal gastos = somaInsumos.add(somaFuncionarios);
+        BigDecimal lucro = evento.getValor().subtract(gastos);
+
+        evento.setGastos(gastos);
+        evento.setLucro(lucro);
     }
 }
 

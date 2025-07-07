@@ -2,6 +2,8 @@ package br.com.papillon.eventos.funcionario.services;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import br.com.papillon.eventos.funcionario.exception.FuncionarioNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,11 +65,15 @@ public class FuncionarioService {
         return new FuncionarioDto(existing);
     }
 
-    @Transactional
+    @Transactional  // import org.springframework.transaction.annotation.Transactional
     public void deleteFuncionarioById(Long id) {
+        System.out.println(">>> Deletando funcionário id=" + id);
+
         if (!repo.existsById(id)) {
-            throw new RuntimeException("Funcionário não encontrado: " + id);
+            throw new FuncionarioNotFoundException(id);
         }
+
         repo.deleteById(id);
+        System.out.println(">>> Chamada deleteById concluída");
     }
 }

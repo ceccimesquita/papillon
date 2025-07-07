@@ -68,4 +68,38 @@ public class Evento {
         this.lucro    = BigDecimal.ZERO;
         // insumos e funcionarios já instanciados como lista vazia
     }
+
+//    @PrePersist @PreUpdate
+//    private void recalcularFinanceiro() {
+//        BigDecimal totalInsumos = insumos == null
+//                ? BigDecimal.ZERO
+//                : insumos.stream()
+//                .map(Insumo::getValor)
+//                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//
+//        BigDecimal totalFuncionarios = funcionarios == null
+//                ? BigDecimal.ZERO
+//                : funcionarios.stream()
+//                .map(Funcionario::getValor)
+//                .reduce(BigDecimal.ZERO, BigDecimal::add);
+//
+//        this.gastos = totalInsumos.add(totalFuncionarios);
+//        this.lucro  = this.valor.subtract(this.gastos);
+//    }
+
+    private void recalcularGastosELucro(Evento evento) {
+        BigDecimal somaInsumos = evento.getInsumos().stream()
+                .map(i -> i.getValor())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal somaFuncionarios = evento.getFuncionarios().stream()
+                .map(f -> f.getValor())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal gastos = somaInsumos.add(somaFuncionarios);
+        BigDecimal lucro = evento.getValor().subtract(gastos);
+
+        evento.setGastos(gastos);
+        evento.setLucro(lucro);
+    }
+
 }
