@@ -3,87 +3,110 @@ package br.com.papillon.eventos.orcamento.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import br.com.papillon.eventos.cliente.dtos.ClienteDto;
+import br.com.papillon.eventos.cliente.entities.Cliente;
+import br.com.papillon.eventos.cliente.repositories.ClienteRepository;
+import br.com.papillon.eventos.evento.services.EventoService;
+import br.com.papillon.eventos.orcamento.dtos.OrcamentoCreateDto;
+import br.com.papillon.eventos.orcamento.dtos.OrcamentoShowDto;
+import br.com.papillon.eventos.orcamento.entities.OrcamentoStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
-import br.com.papillon.eventos.orcamento.dtos.OrcamentoDto;
+
 import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import br.com.papillon.eventos.orcamento.exception.OrcamentoNotFoundException;
 import br.com.papillon.eventos.orcamento.repositories.OrcamentoRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrcamentoService {
 
-    @Autowired
-    private OrcamentoRepository orcamentoRepository;
+    private final OrcamentoRepository repo;
+    private final ClienteRepository clienteRepo;
+    private final EventoService eventoService;
+//    private final CardapioRepository cardRepo;
+//    private final FuncionarioRepository funcRepo;
 
-    public Orcamento createOrcamento(OrcamentoDto dto) {
-        try {
-            Orcamento novo = new Orcamento(dto);
-            return orcamentoRepository.save(novo);
-        } catch (DataAccessException dae) {
-            throw new RuntimeException("Erro ao criar orçamento", dae);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro inesperado ao criar orçamento", e);
-        }
+    public OrcamentoService(OrcamentoRepository repo,
+                            ClienteRepository clienteRepo, EventoService eventoService
+//                            CardapioRepository cardRepo,
+//                            FuncionarioRepository funcRepo
+        ) {
+        this.repo = repo;
+        this.clienteRepo = clienteRepo;
+        this.eventoService = eventoService;
+//        this.cardRepo = cardRepo;
+//        this.funcRepo = funcRepo;
     }
 
-    public List<OrcamentoDto> listAllOrcamentos() {
-        try {
-            return orcamentoRepository.findAll().stream()
-                    .map(OrcamentoDto::new)
-                    .collect(Collectors.toList());
-        } catch (DataAccessException dae) {
-            throw new RuntimeException("Erro ao listar orçamentos", dae);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro inesperado ao listar orçamentos", e);
+    @Transactional
+    public OrcamentoShowDto create(OrcamentoCreateDto dto) {
+        Cliente cliente;
+        if (dto.clienteId() != null) {
+            cliente = clienteRepo.findById(dto.clienteId())
+                    .orElseThrow(() -> new RuntimeException("Cliente não encontrado: " + dto.clienteId()));
+        } else {
+            // cria um cliente novo a partir do sub-DTO
+            ClienteDto c = dto.novoCliente();
+            cliente = new Cliente(c);
+            cliente = clienteRepo.save(cliente);
         }
+
+        Orcamento orc = new Orcamento(dto, cliente);
+        orc = repo.save(orc);
+        return new OrcamentoShowDto(orc);
     }
 
-    public OrcamentoDto getOrcamentoById(Long id) {
-        try {
-            Orcamento orc = orcamentoRepository.findById(id)
-                    .orElseThrow(() -> new OrcamentoNotFoundException(id));
-            return new OrcamentoDto(orc);
-        } catch (OrcamentoNotFoundException onfe) {
-            throw onfe;
-        } catch (DataAccessException dae) {
-            throw new RuntimeException("Erro ao buscar orçamento com ID " + id, dae);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro inesperado ao buscar orçamento", e);
-        }
+    public List<OrcamentoShowDto> listAll() {
+        return repo.findAll().stream()
+                .map(OrcamentoShowDto::new)
+                .collect(Collectors.toList());
     }
 
-    public OrcamentoDto updateOrcamentoById(Long id, OrcamentoDto dto) {
-        try {
-            orcamentoRepository.findById(id)
-                    .orElseThrow(() -> new OrcamentoNotFoundException(id));
-            Orcamento atualizado = new Orcamento(dto);
-            atualizado.setId(id);
-            orcamentoRepository.save(atualizado);
-            return new OrcamentoDto(atualizado);
-        } catch (OrcamentoNotFoundException onfe) {
-            throw onfe;
-        } catch (DataAccessException dae) {
-            throw new RuntimeException("Erro ao atualizar orçamento com ID " + id, dae);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro inesperado ao atualizar orçamento", e);
-        }
+    public OrcamentoShowDto getById(Long id) {
+        return new OrcamentoShowDto(
+                repo.findById(id).orElseThrow(() -> new OrcamentoNotFoundException(id))
+        );
     }
 
-    public void deleteOrcamentoById(Long id) {
-        try {
-            if (!orcamentoRepository.existsById(id)) {
-                throw new OrcamentoNotFoundException(id);
-            }
-            orcamentoRepository.deleteById(id);
-        } catch (OrcamentoNotFoundException onfe) {
-            throw onfe;
-        } catch (DataAccessException dae) {
-            throw new RuntimeException("Erro ao excluir orçamento com ID " + id, dae);
-        } catch (Exception e) {
-            throw new RuntimeException("Erro inesperado ao excluir orçamento", e);
+    @Transactional
+    public OrcamentoShowDto update(Long id, OrcamentoCreateDto dto) {
+        var existente = repo.findById(id)
+                .orElseThrow(() -> new OrcamentoNotFoundException(id));
+        var cliente = clienteRepo.findById(dto.clienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+        existente.setCliente(cliente);
+        existente.setDataDoEvento(dto.dataDoEvento());
+        existente.setQuantidadePessoas(dto.quantidadePessoas());
+        existente.setValorPorPessoa(dto.valorPorPessoa());
+        existente.setDataLimite(dto.dataLimite());
+//        existente.setCardapios(cardRepo.findAllById(dto.cardapioIds()));
+//        existente.setFuncionarios(funcRepo.findAllById(dto.funcionarioIds()));
+        return new OrcamentoShowDto(repo.save(existente));
+    }
+
+    @Transactional
+    public OrcamentoShowDto changeStatus(Long id, OrcamentoStatus novoStatus) {
+        Orcamento existente = repo.findById(id)
+                .orElseThrow(() -> new OrcamentoNotFoundException(id));
+        OrcamentoStatus antigo = existente.getStatus();
+        existente.setStatus(novoStatus);
+        Orcamento salvo = repo.save(existente);
+
+        // só cria evento quando passar de qualquer status para ACEITO
+        if (antigo != OrcamentoStatus.ACEITO
+                && novoStatus == OrcamentoStatus.ACEITO) {
+            eventoService.createFromOrcamento(salvo);
         }
+
+        return new OrcamentoShowDto(salvo);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        if (!repo.existsById(id)) throw new OrcamentoNotFoundException(id);
+        repo.deleteById(id);
     }
 }

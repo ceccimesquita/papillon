@@ -1,5 +1,6 @@
 package br.com.papillon.eventos.orcamento.entities;
 
+import br.com.papillon.eventos.orcamento.dtos.OrcamentoCreateDto;
 import lombok.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -14,24 +15,23 @@ import java.util.stream.Collectors;
 import br.com.papillon.eventos.cliente.entities.Cliente;
 //import br.com.papillon.eventos.cardapio.entities.Cardapio;
 import br.com.papillon.eventos.funcionario.entities.Funcionario;
-import br.com.papillon.eventos.orcamento.dtos.OrcamentoDto;
+
 import br.com.papillon.eventos.cliente.dtos.ClienteDto;
 import br.com.papillon.eventos.funcionario.dtos.FuncionarioDto;
 
 @Entity
 @Table(name = "orcamentos")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Orcamento {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
@@ -47,25 +47,60 @@ public class Orcamento {
     @NotNull
     private BigDecimal valorTotal;
 
-//    @OneToMany(
-//            mappedBy = "orcamento",
-//            cascade = CascadeType.ALL,
-//            orphanRemoval = true
+//    @ManyToMany(fetch = FetchType.EAGER)
+//    @JoinTable(
+//            name = "orcamento_cardapio",
+//            joinColumns = @JoinColumn(name = "orcamento_id"),
+//            inverseJoinColumns = @JoinColumn(name = "cardapio_id")
 //    )
+//    private List<Cardapio> cardapios;
+//
+//    @OneToMany(mappedBy = "orcamento",
+//            cascade = CascadeType.ALL,
+//            orphanRemoval = true,
+//            fetch = FetchType.EAGER)
 //    private List<Funcionario> funcionarios;
 
+    @Enumerated(EnumType.STRING)
+    private OrcamentoStatus status;
 
     @NotNull
-    private Boolean isEvento;
+    private LocalDate dataGeracao;
 
-    public Orcamento(OrcamentoDto dto) {
-        this.cliente = new Cliente(dto.cliente());
+    @NotNull
+    private LocalDate dataLimite;
+
+    @PrePersist
+    private void prePersist() {
+        this.dataGeracao = LocalDate.now();
+        calcularTotal();
+        if (this.status == null) {
+            this.status = OrcamentoStatus.PENDENTE;
+        }
+    }
+
+    @PreUpdate
+    private void preUpdate() {
+        calcularTotal();
+    }
+
+    private void calcularTotal() {
+        if (valorPorPessoa != null && quantidadePessoas != null) {
+            this.valorTotal = valorPorPessoa.multiply(BigDecimal.valueOf(quantidadePessoas));
+        }
+    }
+
+    public Orcamento(OrcamentoCreateDto dto, Cliente cliente
+//                     List<Cardapio> cardapios, List<Funcionario> funcionarios
+    ) {
+        this.cliente = cliente;
         this.dataDoEvento = dto.dataDoEvento();
         this.quantidadePessoas = dto.quantidadePessoas();
         this.valorPorPessoa = dto.valorPorPessoa();
-        this.valorTotal = dto.valorTotal();
-//        this.funcionarios = dto.funcionarios().stream()
-//                .map(funcDto -> new Funcionario(funcDto, this));
-        this.isEvento = dto.isEvento();
+        this.dataLimite = dto.dataLimite();
+//        this.cardapios = cardapios;
+//        this.funcionarios = funcionarios;
+        this.status = OrcamentoStatus.PENDENTE;
+        calcularTotal();
     }
 }

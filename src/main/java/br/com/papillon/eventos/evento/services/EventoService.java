@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import br.com.papillon.eventos.cliente.entities.Cliente;
 import br.com.papillon.eventos.cliente.repositories.ClienteRepository;
+import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -71,6 +72,19 @@ public class EventoService {
         Evento salvo = eventoRepository.save(existente);
         recalcularGastosELucro(salvo);
         return new EventoShowDto(salvo);
+    }
+
+    @Transactional
+    public EventoShowDto createFromOrcamento(Orcamento orc) {
+        // mapeia campos do orçamento para o DTO de criação de evento
+        EventoCreateDto dto = new EventoCreateDto(
+                // você pode querer um nome especial, ou simplesmente reutilizar:
+                orc.getCliente().getNome() + " – Orçamento " + orc.getId(),
+                orc.getCliente().getId(),
+                orc.getDataDoEvento(),
+                orc.getValorTotal()
+        );
+        return createEvento(dto);
     }
 
     @Transactional

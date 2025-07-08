@@ -2,11 +2,16 @@ package br.com.papillon.eventos.orcamento.controllers;
 
 import java.util.List;
 
+import br.com.papillon.eventos.orcamento.dtos.OrcamentoCreateDto;
+import br.com.papillon.eventos.orcamento.dtos.OrcamentoShowDto;
+import br.com.papillon.eventos.orcamento.entities.OrcamentoStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import br.com.papillon.eventos.orcamento.dtos.OrcamentoDto;
+
 import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import br.com.papillon.eventos.orcamento.services.OrcamentoService;
 
@@ -17,43 +22,49 @@ import jakarta.validation.constraints.NotNull;
 @RequestMapping("/api/orcamentos")
 public class OrcamentoController {
 
+    private final OrcamentoService service;
+
     @Autowired
     private OrcamentoService orcamentoService;
 
-    // Criar novo orçamento
+    public OrcamentoController(OrcamentoService service) {
+        this.service = service;
+    }
+
     @PostMapping
-    public ResponseEntity<Orcamento> createOrcamento(@RequestBody @Valid OrcamentoDto dto) {
-        Orcamento novo = orcamentoService.createOrcamento(dto);
-        return ResponseEntity.ok(novo);
+    public ResponseEntity<OrcamentoShowDto> create(@RequestBody @Validated OrcamentoCreateDto dto) {
+        return new ResponseEntity<>(service.create(dto), HttpStatus.CREATED);
     }
 
-    // Listar todos os orçamentos
     @GetMapping
-    public ResponseEntity<List<OrcamentoDto>> listAllOrcamentos() {
-        List<OrcamentoDto> lista = orcamentoService.listAllOrcamentos();
-        return ResponseEntity.ok(lista);
+    public ResponseEntity<List<OrcamentoShowDto>> list() {
+        return ResponseEntity.ok(service.listAll());
     }
 
-    // Obter orçamento por ID
     @GetMapping("/{id}")
-    public ResponseEntity<OrcamentoDto> getOrcamentoById(@PathVariable Long id) {
-        OrcamentoDto dto = orcamentoService.getOrcamentoById(id);
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<OrcamentoShowDto> get(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getById(id));
     }
 
-    // Atualizar orçamento por ID
     @PutMapping("/{id}")
-    public ResponseEntity<OrcamentoDto> updateOrcamentoById(
-            @PathVariable @NotNull Long id,
-            @RequestBody @Valid OrcamentoDto dto) {
-        OrcamentoDto atualizado = orcamentoService.updateOrcamentoById(id, dto);
-        return ResponseEntity.ok(atualizado);
+    public ResponseEntity<OrcamentoShowDto> update(@PathVariable Long id,
+                                                   @RequestBody @Validated OrcamentoCreateDto dto) {
+        return ResponseEntity.ok(service.update(id, dto));
     }
 
-    // Excluir orçamento por ID
+    @PatchMapping("/{id}/status/{status}")
+    public ResponseEntity<OrcamentoShowDto> changeStatus(
+            @PathVariable Long id,
+            @PathVariable OrcamentoStatus status) {
+
+        OrcamentoShowDto updated = orcamentoService.changeStatus(id, status);
+        return ResponseEntity.ok(updated);
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrcamentoById(@PathVariable Long id) {
-        orcamentoService.deleteOrcamentoById(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
+
