@@ -1,17 +1,16 @@
 package br.com.papillon.eventos.cardapios.entities;
 
-import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class Cardapio {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,6 +18,19 @@ public class Cardapio {
     @NotBlank
     private String nome;
 
-    @NotBlank
-    private String tipo;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cardapio_id", nullable = false) 
+    private List<Item> itens;
+
+    public Cardapio(Cardapio original) {
+        this.nome = original.getNome();
+        this.itens = original.getItens().stream()
+            .map(item -> Item.builder()
+                .nome(item.getNome())
+                .tipo(item.getTipo())
+                .build())
+            .collect(Collectors.toList());
+    }
+
+
 }
