@@ -58,6 +58,10 @@ public class OrcamentoService {
         );
     }
 
+    public Orcamento getEntityById(Long id) {
+        return repo.findById(id).orElseThrow(() -> new OrcamentoNotFoundException(id));
+    }
+
     @Transactional
     public OrcamentoShowDto update(Long id, OrcamentoCreateDto dto) {
         var existente = repo.findById(id)

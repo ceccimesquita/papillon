@@ -78,7 +78,6 @@ public class EventoService {
         existente.setCliente(cliente);
         existente.setData(dto.data());
         existente.setValor(dto.valor());
-        // as listas e gastos/lucro serão atualizados abaixo
 
         Evento salvo = eventoRepository.save(existente);
         recalcularGastosELucro(salvo);
@@ -98,7 +97,7 @@ public class EventoService {
 
         novo.setFuncionarios(
             orc.getFuncionarios().stream()
-                .map(Funcionario::new) // Crie construtor copy-constructor se necessário
+                .map(Funcionario::new)
                 .collect(Collectors.toList())
         );
         novo.setCardapios(
