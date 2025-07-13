@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import br.com.papillon.eventos.funcionario.dtos.FuncionarioDto;
 import br.com.papillon.eventos.funcionario.entities.Funcionario;
 import br.com.papillon.eventos.funcionario.repositories.FuncionarioRepository;
-import br.com.papillon.eventos.evento.repositories.EventoRepository;
 
 @Service
 public class FuncionarioService {
@@ -19,14 +18,9 @@ public class FuncionarioService {
     @Autowired
     private FuncionarioRepository repo;
 
-    @Autowired
-    private EventoRepository eventoRepo;
-
     @Transactional
     public FuncionarioDto createFuncionario(FuncionarioDto dto) {
-        var evento = eventoRepo.findById(dto.eventoId())
-                .orElseThrow(() -> new RuntimeException("Evento não encontrado: " + dto.eventoId()));
-        Funcionario f = new Funcionario(dto, evento);
+        Funcionario f = new Funcionario(dto);
         f = repo.save(f);
         return new FuncionarioDto(f);
     }
@@ -49,23 +43,14 @@ public class FuncionarioService {
     public FuncionarioDto updateFuncionarioById(Long id, FuncionarioDto dto) {
         var existing = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Funcionário não encontrado: " + id));
-        var evento = eventoRepo.findById(dto.eventoId())
-                .orElseThrow(() -> new RuntimeException("Evento não encontrado: " + dto.eventoId()));
         existing.setNome(dto.nome());
         existing.setFuncao(dto.funcao());
         existing.setValor(dto.valor());
-        existing.setEvento(evento);
-        // atualiza só o pagamento vinculado
-        var mp = existing.getMetodoPagamento();
-        var mpDto = dto.metodoPagamento();
-        mp.setNome(mpDto.nome());
-        mp.setValor(mpDto.valor());
-        mp.setData(mpDto.data());
-        existing = repo.save(existing);
+
         return new FuncionarioDto(existing);
     }
 
-    @Transactional  // import org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void deleteFuncionarioById(Long id) {
         System.out.println(">>> Deletando funcionário id=" + id);
 

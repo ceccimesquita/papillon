@@ -17,8 +17,7 @@ public record EventoShowDto(
         BigDecimal valor,
         BigDecimal gastos,
         BigDecimal lucro,
-        List<InsumoDto> insumos,
-        List<FuncionarioDto> funcionarios
+        List<InsumoDto> insumos
 ) {
     public EventoShowDto(Evento e) {
         this(
@@ -29,8 +28,7 @@ public record EventoShowDto(
                 e.getValor(),
                 e.getGastos(),
                 e.getLucro(),
-                e.getInsumos().stream().map(InsumoDto::new).toList(),
-                e.getFuncionarios().stream().map(FuncionarioDto::new).toList()
-        );
+                e.getInsumos().stream().map(InsumoDto::new).toList()
+            );
     }
 }

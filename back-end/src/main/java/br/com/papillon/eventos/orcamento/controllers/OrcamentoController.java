@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import br.com.papillon.eventos.orcamento.services.OrcamentoService;
 
 @RestController
-@RequestMapping("/api/orcamentos")
+@RequestMapping("/api/orcamento")
 public class OrcamentoController {
 
     private final OrcamentoService service;

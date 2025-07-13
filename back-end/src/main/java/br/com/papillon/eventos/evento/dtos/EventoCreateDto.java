@@ -11,15 +11,16 @@ public record EventoCreateDto(
         @NotBlank @Size(max = 150) String nome,
         @NotNull Long clienteId,
         @NotNull LocalDate data,
-        @NotNull BigDecimal valor
+        @NotNull BigDecimal valor,
+        @NotBlank String status
 ) {
-    // Construtor inverso, para mapear entidade → DTO (se precisar)
     public EventoCreateDto(Evento evento) {
         this(
                 evento.getNome(),
                 evento.getCliente().getId(),
                 evento.getData(),
-                evento.getValor()
+                evento.getValor(),
+                evento.getStatus()
         );
     }
 }
