@@ -37,7 +37,7 @@ export interface OrcamentoPayload {
 export interface OrcamentoResponse extends OrcamentoPayload {
   id: number;
   valorTotal: number;
-  status: "PENDENTE" | "ACEITO" | "REJEITADO";
+  status: "PENDENTE" | "ACEITO" | "RECUSADO";
   createdAt: string;
   eventId?: number;
 }
@@ -89,7 +89,7 @@ export async function atualizarOrcamento(id: number, payload: OrcamentoPayload):
   return response.json();
 }
 
-export async function atualizarStatusOrcamento(id: number, status: "PENDENTE" | "ACEITO" | "REJEITADO"): Promise<OrcamentoResponse> {
+export async function atualizarStatusOrcamento(id: number, status: "PENDENTE" | "ACEITO" | "RECUSADO"): Promise<OrcamentoResponse> {
   const response = await fetch(`http://localhost:8080/api/orcamento/${id}/status/${status}`, {
     method: "PATCH",
   });

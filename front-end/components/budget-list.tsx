@@ -1,8 +1,6 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
 import { ChevronRight, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -26,13 +24,13 @@ export function BudgetList({ budgets }: BudgetListProps) {
   const statusColors = {
     PENDENTE: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-100",
     ACEITO: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100",
-    REJEITADO: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100",
+    RECUSADO: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100",
   }
 
   const statusLabels = {
     PENDENTE: "PENDENTE",
     ACEITO: "ACEITO",
-    REJEITADO: "REJEITADO",
+    RECUSADO: "RECUSADO",
   }
 
   return (

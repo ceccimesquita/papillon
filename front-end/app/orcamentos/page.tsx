@@ -19,7 +19,7 @@ export default function BudgetsPage() {
 
   const pendingBudgets = budgets.filter((budget) => budget.status === "PENDENTE")
   const acceptedBudgets = budgets.filter((budget) => budget.status === "ACEITO")
-  const rejectedBudgets = budgets.filter((budget) => budget.status === "REJEITADO")
+  const rejectedBudgets = budgets.filter((budget) => budget.status === "RECUSADO")
 
   if (loading) {
     return (
