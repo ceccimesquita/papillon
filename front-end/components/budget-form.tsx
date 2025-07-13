@@ -18,6 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Budget, MenuItem } from "@/lib/store"
 
+import { enviarOrcamento } from "../lib/api/orcamentosService"
+
 // Vamos adicionar o parâmetro onError à interface BudgetFormProps
 interface BudgetFormProps {
   budgetId?: string // Opcional para edição
@@ -269,113 +271,80 @@ export function BudgetForm({ budgetId, onError }: BudgetFormProps = {}) {
     return Object.keys(newErrors).length === 0
   }
 
-  // Enviar o formulário
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log("Tentando enviar formulário...")
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    if (!validateForm()) {
-      console.log("Formulário inválido, não enviado")
-      toast({
-        variant: "destructive",
-        title: "Erro ao criar orçamento",
-        description: "Por favor, corrija os erros no formulário antes de continuar.",
-      })
+  if (!validateForm()) {
+    toast({
+      variant: "destructive",
+      title: "Erro ao criar orçamento",
+      description: "Por favor, corrija os erros no formulário antes de continuar.",
+    })
+    onError?.("Por favor, corrija os erros destacados no formulário antes de continuar.")
+    return
+  }
 
-      if (onError) {
-        onError("Por favor, corrija os erros destacados no formulário antes de continuar.")
-      }
-      return
-    }
-
-    try {
-      // Converter pessoas para o formato correto
-      const formattedPeople = people
-        .filter((person) => person.name.trim() !== "")
-        .map((person) => ({
-          name: person.name,
-          role: person.role,
-          salary: Number.parseFloat(person.salary) || 0,
+  const payload = {
+    cliente: {
+      nome: clientName,
+      email: clientEmail || undefined,
+      cpfCnpj: clientDocument || undefined,
+      telefone: clientPhone || undefined,
+    },
+    dataDoEvento: eventDate?.toISOString().split("T")[0],
+    quantidadePessoas: Number.parseInt(peopleCount),
+    valorPorPessoa: Number.parseFloat(value),
+    dataLimite: eventDate?.toISOString().split("T")[0], // ou outro campo se tiver
+    cardapios: menus.flatMap((menu) =>
+      menu.items
+        .filter((item) => item.name.trim() !== "")
+        .map((item) => ({
+          nome: item.name,
+          tipo: item.type === "food" ? "prato" : "bebida",
         }))
+    ),
+    funcionarios: people
+      .filter((p) => p.name.trim() !== "")
+      .map((p) => ({
+        nome: p.name,
+        funcao: p.role,
+        valor: Number.parseFloat(p.salary),
+      })),
+  }
 
-      // Converter cardápios para o formato correto
-      const formattedMenus = menus
-        .filter((menu) => menu.name.trim() !== "")
-        .map((menu) => ({
-          id: menu.id,
-          name: menu.name,
-          items: menu.items.filter((item) => item.name.trim() !== ""),
-        }))
-
-      const budgetData: Omit<Budget, "id" | "createdAt" | "status"> = {
-        client: {
-          name: clientName,
-          phone: clientPhone || undefined,
-          email: clientEmail || undefined,
-          document: clientDocument || undefined,
-        },
-        value: Number.parseFloat(value) || 0,
-        peopleCount: Number.parseInt(peopleCount) || 0,
-        dishes: [], // Mantido para compatibilidade
-        notes: notes || undefined,
-        eventDate: eventDate as Date,
-        people: formattedPeople,
-        menus: formattedMenus,
-      }
-
-      console.log("Dados do orçamento formatados:", budgetData)
-
-      if (isEditing && budgetId) {
-        // Atualizar orçamento existente
-        const existingBudget = getBudget(budgetId)
-        if (existingBudget) {
-          const updatedBudget: Budget = {
-            ...existingBudget,
-            ...budgetData,
-          }
-          updateBudget(budgetId, updatedBudget)
-
-          toast({
-            title: "Orçamento atualizado",
-            description: "O orçamento foi atualizado com sucesso.",
-          })
-
-          console.log("Orçamento atualizado com sucesso")
-          router.push("/orcamentos")
+  try {
+    if (isEditing && budgetId) {
+      const existingBudget = getBudget(budgetId)
+      if (existingBudget) {
+        const updatedBudget = {
+          ...existingBudget,
+          // pode usar payload se quiser, adaptando os campos
+          value: Number.parseFloat(value),
+          peopleCount: Number.parseInt(peopleCount),
+          notes,
+          eventDate: eventDate as Date,
         }
-      } else {
-        // Criar novo orçamento
-        const newBudget: Budget = {
-          id: Date.now().toString(),
-          createdAt: new Date(),
-          status: "pending",
-          ...budgetData,
-        }
-
-        console.log("Criando novo orçamento:", newBudget)
-        addBudget(newBudget)
-
-        toast({
-          title: "Orçamento criado",
-          description: "O orçamento foi criado com sucesso.",
-        })
-
-        console.log("Orçamento criado com sucesso")
+        updateBudget(budgetId, updatedBudget)
+        toast({ title: "Orçamento atualizado", description: "Atualização local concluída." })
         router.push("/orcamentos")
       }
-    } catch (error) {
-      console.error("Erro ao criar/atualizar orçamento:", error)
-      toast({
-        variant: "destructive",
-        title: "Erro ao processar orçamento",
-        description: "Ocorreu um erro ao criar ou atualizar o orçamento. Tente novamente.",
-      })
+    } else {
+      await enviarOrcamento(payload)
 
-      if (onError) {
-        onError(`Erro ao processar orçamento: ${error instanceof Error ? error.message : "Erro desconhecido"}`)
-      }
+      toast({ title: "Orçamento enviado", description: "O orçamento foi enviado com sucesso." })
+      router.push("/orcamentos")
     }
+  } catch (error) {
+    console.error("Erro ao enviar orçamento:", error)
+    toast({
+      variant: "destructive",
+      title: "Erro ao processar orçamento",
+      description: "Ocorreu um erro ao enviar o orçamento. Tente novamente.",
+    })
+    onError?.(error instanceof Error ? error.message : "Erro desconhecido")
   }
+}
+
 
   // Formatar CPF/CNPJ
   const formatDocument = (value: string) => {
@@ -508,7 +477,7 @@ export function BudgetForm({ budgetId, onError }: BudgetFormProps = {}) {
 
           <div className="space-y-2">
             <label htmlFor="value" className="text-sm font-medium">
-              Valor Total (R$) *
+              Valor Total por Pessoa (R$) *
             </label>
             <Input
               id="value"

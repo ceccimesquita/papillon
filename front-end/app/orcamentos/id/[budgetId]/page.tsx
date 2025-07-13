@@ -70,6 +70,10 @@ export default function BudgetDetailPage() {
         description:
           "O orçamento foi convertido em evento com sucesso. Agora você pode adicionar métodos de pagamento.",
       })
+
+      if (eventId) {
+        router.push(`/events/${eventId}`)
+      }
     }
   }
 
@@ -81,14 +85,6 @@ export default function BudgetDetailPage() {
       title: "Orçamento rejeitado",
       description: "O orçamento foi marcado como rejeitado.",
     })
-  }
-
-  const handlePaymentSuccess = () => {
-    setPaymentDialogOpen(false)
-
-    if (eventId) {
-      router.push(`/events/${eventId}`)
-    }
   }
 
   const handleEditBudget = () => {
@@ -464,18 +460,6 @@ export default function BudgetDetailPage() {
           )}
         </CardContent>
       </Card>
-
-      <Dialog open={paymentDialogOpen && !!eventId} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Adicionar Métodos de Pagamento</DialogTitle>
-            <DialogDescription>
-              O orçamento foi aceito! Agora defina os métodos de pagamento para este evento.
-            </DialogDescription>
-          </DialogHeader>
-          {eventId && <PaymentMethodsForm eventId={eventId} onSuccess={handlePaymentSuccess} />}
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
