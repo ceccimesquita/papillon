@@ -22,12 +22,11 @@ public class InsumoController {
 
     // Criar novo insumo
     // Controller
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<InsumoDto> createInsumo(@RequestBody @Valid InsumoDto dto) {
         Insumo criado = insumoService.createInsumo(dto);
         return ResponseEntity.ok(new InsumoDto(criado));
     }
-
 
     // Listar todos os insumos
     @GetMapping

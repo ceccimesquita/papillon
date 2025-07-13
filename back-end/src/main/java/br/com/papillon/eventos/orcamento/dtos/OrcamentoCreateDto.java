@@ -1,26 +1,24 @@
 package br.com.papillon.eventos.orcamento.dtos;
 
+import br.com.papillon.eventos.cardapios.entities.Cardapio;
 import br.com.papillon.eventos.cliente.dtos.ClienteDto;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
+import br.com.papillon.eventos.funcionario.entities.Funcionario;
 
+import java.util.List;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 public record OrcamentoCreateDto(
-        Long clienteId,
-        @Valid ClienteDto novoCliente,   // opcional, só preenche se for um cliente novo
+        @Valid ClienteDto cliente,
         @NotNull LocalDate dataDoEvento,
         @NotNull Integer quantidadePessoas,
         @NotNull BigDecimal valorPorPessoa,
-        @NotNull LocalDate dataLimite
+        @NotNull LocalDate dataLimite,
+        List<Cardapio> cardapios,
+        List<Funcionario> funcionarios
 ) {
-    @AssertTrue(message = "Informe clienteId ou dados do novo cliente")
-    public boolean isClienteInfoValida() {
-        return (clienteId != null) ^ (novoCliente != null);
-    }
 }
 
 

@@ -1,23 +1,35 @@
 package br.com.papillon.eventos.orcamento.entities;
 
 import br.com.papillon.eventos.orcamento.dtos.OrcamentoCreateDto;
-import lombok.*;
-import jakarta.persistence.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
-import java.math.BigDecimal;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
+import br.com.papillon.eventos.cardapios.entities.Cardapio;
 import br.com.papillon.eventos.cliente.entities.Cliente;
-//import br.com.papillon.eventos.cardapio.entities.Cardapio;
 import br.com.papillon.eventos.funcionario.entities.Funcionario;
-
-import br.com.papillon.eventos.cliente.dtos.ClienteDto;
-import br.com.papillon.eventos.funcionario.dtos.FuncionarioDto;
 
 @Entity
 @Table(name = "orcamentos")
@@ -47,19 +59,13 @@ public class Orcamento {
     @NotNull
     private BigDecimal valorTotal;
 
-//    @ManyToMany(fetch = FetchType.EAGER)
-//    @JoinTable(
-//            name = "orcamento_cardapio",
-//            joinColumns = @JoinColumn(name = "orcamento_id"),
-//            inverseJoinColumns = @JoinColumn(name = "cardapio_id")
-//    )
-//    private List<Cardapio> cardapios;
-//
-//    @OneToMany(mappedBy = "orcamento",
-//            cascade = CascadeType.ALL,
-//            orphanRemoval = true,
-//            fetch = FetchType.EAGER)
-//    private List<Funcionario> funcionarios;
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "orcamento_id", nullable = false) // <== importante!
+    private List<Cardapio> cardapios;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "orcamento_id", nullable = false)
+    private List<Funcionario> funcionarios;
 
     @Enumerated(EnumType.STRING)
     private OrcamentoStatus status;
@@ -91,15 +97,14 @@ public class Orcamento {
     }
 
     public Orcamento(OrcamentoCreateDto dto, Cliente cliente
-//                     List<Cardapio> cardapios, List<Funcionario> funcionarios
     ) {
         this.cliente = cliente;
         this.dataDoEvento = dto.dataDoEvento();
         this.quantidadePessoas = dto.quantidadePessoas();
         this.valorPorPessoa = dto.valorPorPessoa();
         this.dataLimite = dto.dataLimite();
-//        this.cardapios = cardapios;
-//        this.funcionarios = funcionarios;
+        this.cardapios = dto.cardapios();
+        this.funcionarios = dto.funcionarios();
         this.status = OrcamentoStatus.PENDENTE;
         calcularTotal();
     }

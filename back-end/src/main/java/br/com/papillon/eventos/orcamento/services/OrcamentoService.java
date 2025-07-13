@@ -3,21 +3,21 @@ package br.com.papillon.eventos.orcamento.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import br.com.papillon.eventos.cliente.dtos.ClienteDto;
 import br.com.papillon.eventos.cliente.entities.Cliente;
 import br.com.papillon.eventos.cliente.repositories.ClienteRepository;
+import br.com.papillon.eventos.cliente.services.ClienteService;
 import br.com.papillon.eventos.evento.services.EventoService;
 import br.com.papillon.eventos.orcamento.dtos.OrcamentoCreateDto;
 import br.com.papillon.eventos.orcamento.dtos.OrcamentoShowDto;
 import br.com.papillon.eventos.orcamento.entities.OrcamentoStatus;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
+
 import org.springframework.stereotype.Service;
 
 
 import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import br.com.papillon.eventos.orcamento.exception.OrcamentoNotFoundException;
 import br.com.papillon.eventos.orcamento.repositories.OrcamentoRepository;
+
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -25,36 +25,24 @@ public class OrcamentoService {
 
     private final OrcamentoRepository repo;
     private final ClienteRepository clienteRepo;
+    private final ClienteService clienteService;
     private final EventoService eventoService;
-//    private final CardapioRepository cardRepo;
-//    private final FuncionarioRepository funcRepo;
 
-    public OrcamentoService(OrcamentoRepository repo,
-                            ClienteRepository clienteRepo, EventoService eventoService
-//                            CardapioRepository cardRepo,
-//                            FuncionarioRepository funcRepo
-        ) {
-        this.repo = repo;
+    public OrcamentoService(OrcamentoRepository repo, ClienteService clienteService, 
+                EventoService eventoService, ClienteRepository clienteRepo) {
         this.clienteRepo = clienteRepo;
+        this.repo = repo;
+        this.clienteService = clienteService;
         this.eventoService = eventoService;
-//        this.cardRepo = cardRepo;
-//        this.funcRepo = funcRepo;
+
     }
 
     @Transactional
     public OrcamentoShowDto create(OrcamentoCreateDto dto) {
-        Cliente cliente;
-        if (dto.clienteId() != null) {
-            cliente = clienteRepo.findById(dto.clienteId())
-                    .orElseThrow(() -> new RuntimeException("Cliente não encontrado: " + dto.clienteId()));
-        } else {
-            // cria um cliente novo a partir do sub-DTO
-            ClienteDto c = dto.novoCliente();
-            cliente = new Cliente(c);
-            cliente = clienteRepo.save(cliente);
-        }
+        Cliente cliente = clienteService.getByCpfCnpjOrCreate(dto.cliente());
 
         Orcamento orc = new Orcamento(dto, cliente);
+
         orc = repo.save(orc);
         return new OrcamentoShowDto(orc);
     }
@@ -75,7 +63,7 @@ public class OrcamentoService {
     public OrcamentoShowDto update(Long id, OrcamentoCreateDto dto) {
         var existente = repo.findById(id)
                 .orElseThrow(() -> new OrcamentoNotFoundException(id));
-        var cliente = clienteRepo.findById(dto.clienteId())
+        var cliente = clienteRepo.findByCpfCnpj(dto.cliente().cpfCnpj())
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
         existente.setCliente(cliente);
         existente.setDataDoEvento(dto.dataDoEvento());

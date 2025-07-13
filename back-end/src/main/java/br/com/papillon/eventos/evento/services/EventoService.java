@@ -95,18 +95,7 @@ public class EventoService {
 
     // --------------------------------------------------------
     private void recalcularGastosELucro(Evento evento) {
-        BigDecimal somaInsumos = evento.getInsumos().stream()
-                .map(i -> i.getValor())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal somaFuncionarios = evento.getFuncionarios().stream()
-                .map(f -> f.getValor())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal gastos = somaInsumos.add(somaFuncionarios);
-        BigDecimal lucro = evento.getValor().subtract(gastos);
-
-        evento.setGastos(gastos);
-        evento.setLucro(lucro);
+        return;
     }
 }
 

@@ -25,7 +25,7 @@ public class ClienteService {
     public List<ClienteDto> listAllClientes() {
         List<Cliente> clientes = clienteRepository.findAll();
         return clientes.stream()
-                .map(cliente -> new ClienteDto(cliente))
+                .map(ClienteDto::new)
                 .collect(Collectors.toList());
     }
 
@@ -49,5 +49,10 @@ public class ClienteService {
             throw new ClienteNotFoundException(id);
         }
         clienteRepository.deleteById(id);
+    }
+
+    public Cliente getByCpfCnpjOrCreate(ClienteDto dto) {
+        return clienteRepository.findByCpfCnpj(dto.cpfCnpj())
+                .orElseGet(() -> clienteRepository.save(new Cliente(dto)));
     }
 }

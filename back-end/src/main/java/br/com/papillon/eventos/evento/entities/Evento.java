@@ -2,7 +2,6 @@ package br.com.papillon.eventos.evento.entities;
 
 import br.com.papillon.eventos.cliente.entities.Cliente;
 import br.com.papillon.eventos.evento.dtos.EventoCreateDto;
-import br.com.papillon.eventos.funcionario.entities.Funcionario;
 import br.com.papillon.eventos.insumos.entities.Insumo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -51,13 +50,6 @@ public class Evento {
     @JsonIgnoreProperties("evento")
     private List<Insumo> insumos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "evento",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.EAGER)
-    @JsonIgnoreProperties("evento")
-    private List<Funcionario> funcionarios = new ArrayList<>();
-
     // Construtor para criação a partir do DTO
     public Evento(EventoCreateDto dto, Cliente cliente) {
         this.nome     = dto.nome();
@@ -91,11 +83,7 @@ public class Evento {
         BigDecimal somaInsumos = evento.getInsumos().stream()
                 .map(i -> i.getValor())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal somaFuncionarios = evento.getFuncionarios().stream()
-                .map(f -> f.getValor())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal gastos = somaInsumos.add(somaFuncionarios);
         BigDecimal lucro = evento.getValor().subtract(gastos);
 
         evento.setGastos(gastos);
