@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.papillon.eventos.cliente.dtos.ClienteDto;
 import br.com.papillon.eventos.cliente.entities.Cliente;
+import br.com.papillon.eventos.cliente.exceptions.ClienteAlreadyExistsException;
 import br.com.papillon.eventos.cliente.exceptions.ClienteNotFoundException;
 import br.com.papillon.eventos.cliente.repositories.ClienteRepository;
 
@@ -18,6 +19,9 @@ public class ClienteService {
     private ClienteRepository clienteRepository;
 
     public Cliente registerCliente(ClienteDto clienteDto) {
+        if (clienteRepository.existsByCpfCnpj(clienteDto.cpfCnpj())) {
+            throw new ClienteAlreadyExistsException(clienteDto.cpfCnpj());
+        }
         Cliente novoCliente = new Cliente(clienteDto);
         return clienteRepository.save(novoCliente);
     }

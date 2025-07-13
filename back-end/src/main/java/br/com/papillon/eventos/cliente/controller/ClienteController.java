@@ -4,29 +4,36 @@ import java.util.Map;
 
 import br.com.papillon.eventos.cliente.dtos.ClienteDto;
 import br.com.papillon.eventos.cliente.entities.Cliente;
+import br.com.papillon.eventos.cliente.exceptions.ClienteAlreadyExistsException;
 import br.com.papillon.eventos.cliente.services.ClienteService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/clientes")
+@RequestMapping("/api/cliente")
 public class ClienteController {
 
     @Autowired
     private ClienteService clienteService;
 
-    // Registrar Cliente
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<Map<String, Object>> registerCliente(@RequestBody @Valid ClienteDto dto) {
-        Cliente cliente = clienteService.registerCliente(dto);
-        return ResponseEntity.ok(Map.of(
-                "message", "Cliente registrado com sucesso",
-                "cliente", cliente
-        ));
+        try {
+            Cliente cliente = clienteService.registerCliente(dto);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Cliente registrado com sucesso",
+                    "cliente", cliente
+            ));
+        } catch (ClienteAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
     }
 
     // Obter todos os clientes

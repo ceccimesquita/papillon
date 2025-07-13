@@ -2,9 +2,6 @@ package br.com.papillon.eventos.cliente.dtos;
 
 import br.com.papillon.eventos.cliente.entities.Cliente;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
 public record ClienteDto(
         String nome,
         String email,

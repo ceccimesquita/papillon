@@ -1,5 +1,6 @@
 package br.com.papillon.eventos.cliente.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -36,6 +37,7 @@ public class Cliente {
 
     @Size(max = 20)
     @NotBlank
+    @Column(unique = true)
     private String cpfCnpj;
 
     @Size(max = 20)
