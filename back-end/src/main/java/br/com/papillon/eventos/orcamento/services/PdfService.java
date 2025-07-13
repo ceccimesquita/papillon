@@ -1,37 +1,72 @@
 package br.com.papillon.eventos.orcamento.services;
 
 import com.lowagie.text.*;
-import com.lowagie.text.Font;
 import com.lowagie.text.pdf.*;
 import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import org.springframework.stereotype.Service;
 import java.awt.*;
+import com.lowagie.text.Font;
 import java.io.ByteArrayOutputStream;
+import java.util.Date;
 
 @Service
 public class PdfService {
 
     public byte[] generatePdfFromOrcamento(Orcamento orcamento) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            Document document = new Document(PageSize.A4, 36, 36, 36, 36); // Margens reduzidas
+            Document document = new Document(PageSize.A4, 36, 36, 36, 36);
             PdfWriter.getInstance(document, baos);
             document.open();
 
-            // Configuração de fontes
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, Color.BLUE);
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, new Color(0, 51, 102));
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
             Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
             Font smallBoldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9);
+            Font italicFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 10);
             
-            // Título principal
-            Paragraph title = new Paragraph("DETALHES DO ORÇAMENTO", titleFont);
+            Paragraph saudacao = new Paragraph();
+            saudacao.add(new Chunk("PREZADO(A): " + orcamento.getCliente().getNome(), headerFont));
+            document.add(saudacao);
+            document.add(Chunk.NEWLINE);
+            
+            addFormattedText(document, 
+                "É com imensa satisfação que enviamos proposta e condições especiais para a realização do evento.",
+                normalFont, 0);
+            
+            addFormattedText(document, "- SERVIÇO DE QUALIDADE", headerFont, 10);
+            addFormattedText(document, 
+                "Nosso serviço proporcionará uma experiência personalizada que valoriza cada pessoa presente. " +
+                "Seu evento terá cardápio e decoração exclusivos.", 
+                normalFont, 5);
+            
+            addFormattedText(document, "- NOSSO HISTÓRICO – COMO COMEÇAMOS", headerFont, 10);
+            addFormattedText(document, 
+                "PAPILLON hoje considerada uma das principais empresas de gastronomia e decoração de Fortaleza, " +
+                "tem uma ótima reputação que foi conquistada graças a um trabalho de excelência e muito relacionamento " +
+                "de proximidade e respeito com nossos clientes ao longo dos anos. Acreditamos que todos eles merecem " +
+                "o mais alto nível de atendimento, e esse é exatamente o nosso compromisso. Desde 2003 Erika Queiroz " +
+                "trabalha sempre para superar as expectativas, realizando eventos sociais e corporativos, com " +
+                "altíssimo padrão de qualidade a cada entrega.",
+                normalFont, 5);
+            
+            addFormattedText(document, "- SERVIÇOS", headerFont, 10);
+            addFormattedText(document, "Gastronomia e Decoração", headerFont, 5);
+            addFormattedText(document, 
+                "- Nossos serviços são personalizados para refletir a identidade de cada evento. Sendo idealizado " +
+                "com muita dedicação, comprometimento e amor, transformando sonhos em realidade!", 
+                normalFont, 5);
+            
+            addFormattedText(document, "- ORÇAMENTO -", headerFont, 10);
+            addFormattedText(document, 
+                "É com imensa satisfação que enviamos proposta e condições especiais para a realização do seu evento.",
+                normalFont, 15);
+            
+            Paragraph title = new Paragraph(20);
+            title.add(new Chunk("DETALHES DO ORÇAMENTO", titleFont));
             title.setAlignment(Element.ALIGN_CENTER);
-            title.setSpacingAfter(20);
             document.add(title);
 
-            // Tabela de informações principais
-            float[] columnWidths = {30, 70};
-            PdfPTable mainTable = new PdfPTable(columnWidths);
+            PdfPTable mainTable = new PdfPTable(new float[]{35, 65});
             mainTable.setWidthPercentage(100);
             mainTable.setSpacingBefore(10);
             
@@ -43,22 +78,22 @@ public class PdfService {
             addTableRow(mainTable, "Data do Evento:", orcamento.getDataDoEvento().toString(), normalFont);
             addTableRow(mainTable, "Quantidade de Pessoas:", String.valueOf(orcamento.getQuantidadePessoas()), normalFont);
             addTableRow(mainTable, "Valor por Pessoa:", "R$" + orcamento.getValorPorPessoa(), normalFont);
-            addTableRow(mainTable, "Valor Total:", "R$" + orcamento.getValorTotal(), headerFont);
+            addTableRow(mainTable, "Valor Total:", "R$" + orcamento.getValorTotal(), normalFont);
             addTableRow(mainTable, "Data Limite:", orcamento.getDataLimite().toString(), normalFont);
             
             document.add(mainTable);
             
-            // Seção de cardápios
-            Paragraph cardapiosTitle = new Paragraph("\n📋 CARDÁPIOS", headerFont);
-            cardapiosTitle.setSpacingBefore(15);
+            Paragraph cardapiosTitle = new Paragraph(15);
+            cardapiosTitle.add(new Chunk("📋 CARDÁPIOS", headerFont));
             document.add(cardapiosTitle);
             
             for (var c : orcamento.getCardapios()) {
-                Paragraph cardapioName = new Paragraph("- " + c.getNome(), smallBoldFont);
+                Paragraph cardapioName = new Paragraph();
+                cardapioName.add(new Chunk("- " + c.getNome(), smallBoldFont));
                 cardapioName.setIndentationLeft(10);
                 document.add(cardapioName);
                 
-                PdfPTable itensTable = new PdfPTable(2);
+                PdfPTable itensTable = new PdfPTable(new float[]{70, 30});
                 itensTable.setWidthPercentage(100);
                 itensTable.setSpacingBefore(5);
                 
@@ -66,36 +101,16 @@ public class PdfService {
                 itensTable.addCell(createCell("Tipo", Element.ALIGN_LEFT, true, smallBoldFont));
                 
                 for (var i : c.getItens()) {
-                    itensTable.addCell(createCell("    • " + i.getNome(), Element.ALIGN_LEFT, false, normalFont));
+                    itensTable.addCell(createCell("• " + i.getNome(), Element.ALIGN_LEFT, false, normalFont));
                     itensTable.addCell(createCell(i.getTipo(), Element.ALIGN_LEFT, false, normalFont));
                 }
                 
                 document.add(itensTable);
+                document.add(Chunk.NEWLINE);
             }
 
-            // Seção de funcionários
-            Paragraph funcionariosTitle = new Paragraph("\n👷 FUNCIONÁRIOS", headerFont);
-            funcionariosTitle.setSpacingBefore(15);
-            document.add(funcionariosTitle);
-            
-            PdfPTable funcTable = new PdfPTable(new float[]{50, 30, 20});
-            funcTable.setWidthPercentage(100);
-            funcTable.setSpacingBefore(5);
-            
-            funcTable.addCell(createCell("Nome", Element.ALIGN_LEFT, true, smallBoldFont));
-            funcTable.addCell(createCell("Função", Element.ALIGN_LEFT, true, smallBoldFont));
-            funcTable.addCell(createCell("Valor", Element.ALIGN_RIGHT, true, smallBoldFont));
-            
-            for (var f : orcamento.getFuncionarios()) {
-                funcTable.addCell(createCell(f.getNome(), Element.ALIGN_LEFT, false, normalFont));
-                funcTable.addCell(createCell(f.getFuncao(), Element.ALIGN_LEFT, false, normalFont));
-                funcTable.addCell(createCell("R$" + f.getValor(), Element.ALIGN_RIGHT, false, normalFont));
-            }
-            
-            document.add(funcTable);
-
-            // Rodapé
-            Paragraph footer = new Paragraph("\nGerado em: " + new java.util.Date(), normalFont);
+            Paragraph footer = new Paragraph(20);
+            footer.add(new Chunk("Gerado em: " + new Date(), italicFont));
             footer.setAlignment(Element.ALIGN_CENTER);
             document.add(footer);
 
@@ -106,12 +121,15 @@ public class PdfService {
         }
     }
 
-    // Métodos auxiliares para criação de células
+    private void addFormattedText(Document document, String text, Font font, float spacingAfter) throws DocumentException {
+        Paragraph p = new Paragraph();
+        p.add(new Chunk(text, font));
+        p.setSpacingAfter(spacingAfter);
+        document.add(p);
+    }
+    
     private void addTableHeader(PdfPTable table, String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setBackgroundColor(new Color(220, 220, 220));
-        cell.setPadding(5);
-        table.addCell(cell);
+        table.addCell(createCell(text, Element.ALIGN_CENTER, true, font));
     }
     
     private void addTableRow(PdfPTable table, String label, String value, Font font) {
@@ -124,10 +142,13 @@ public class PdfService {
             FontFactory.getFont(FontFactory.HELVETICA_BOLD, baseFont.getSize(), baseFont.getColor()) : 
             baseFont;
         
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        PdfPCell cell = new PdfPCell(new Phrase(new Chunk(text, font)));
         cell.setHorizontalAlignment(alignment);
         cell.setPadding(5);
         cell.setBorderColor(Color.LIGHT_GRAY);
+        if (isBold) {
+            cell.setBackgroundColor(new Color(240, 240, 240));
+        }
         return cell;
     }
 }
