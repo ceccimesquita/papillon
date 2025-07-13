@@ -7,15 +7,40 @@ import Link from "next/link"
 import { useEventStore } from "@/lib/store"
 import { BudgetList } from "@/components/budget-list"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-import { pegarOrcamentos } from "@/lib/api/orcamentosService"
+import { useEffect } from "react"
 
 export default function BudgetsPage() {
-  const { budgets } = useEventStore()
+  const { budgets, fetchBudgets, loading, error } = useEventStore()
 
-  const pendingBudgets = budgets.filter((budget) => budget.status === "pending")
-  const acceptedBudgets = budgets.filter((budget) => budget.status === "accepted")
-  const rejectedBudgets = budgets.filter((budget) => budget.status === "rejected")
+  // Carrega os orçamentos quando o componente monta
+  useEffect(() => {
+    fetchBudgets()
+  }, [fetchBudgets])
+
+  const pendingBudgets = budgets.filter((budget) => budget.status === "PENDENTE")
+  const acceptedBudgets = budgets.filter((budget) => budget.status === "ACEITO")
+  const rejectedBudgets = budgets.filter((budget) => budget.status === "REJEITADO")
+
+  if (loading) {
+    return (
+      <div className="container max-w-full mx-auto px-4 py-6 md:px-6 md:py-8">
+        <div className="flex justify-center items-center h-64">
+          <p>Carregando orçamentos...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container max-w-full mx-auto px-4 py-6 md:px-6 md:py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Erro!</strong>
+          <span className="block sm:inline"> {error}</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container max-w-full mx-auto px-4 py-6 md:px-6 md:py-8">

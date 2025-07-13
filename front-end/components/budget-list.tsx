@@ -24,15 +24,15 @@ export function BudgetList({ budgets }: BudgetListProps) {
   }
 
   const statusColors = {
-    pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-100",
-    accepted: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100",
-    rejected: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100",
+    PENDENTE: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-100",
+    ACEITO: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100",
+    REJEITADO: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100",
   }
 
   const statusLabels = {
-    pending: "Pendente",
-    accepted: "Aceito",
-    rejected: "Rejeitado",
+    PENDENTE: "PENDENTE",
+    ACEITO: "ACEITO",
+    REJEITADO: "REJEITADO",
   }
 
   return (
@@ -48,21 +48,19 @@ export function BudgetList({ budgets }: BudgetListProps) {
               <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="font-medium">{budget.client.name}</h3>
+              <h3 className="font-medium">{budget.cliente.nome}</h3>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="outline" className={statusColors[budget.status]}>
                   {statusLabels[budget.status]}
                 </Badge>
-                <span className="text-xs text-muted-foreground">
-                  {format(new Date(budget.createdAt), "dd/MM/yyyy", { locale: ptBR })}
-                </span>
+                
               </div>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="font-medium">R$ {budget.value.toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground">{budget.peopleCount} pessoas</p>
+              <p className="font-medium">R$ {budget.valorPorPessoa.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground">{budget.quantidadePessoas} pessoas</p>
             </div>
             <Button variant="ghost" size="icon">
               <ChevronRight className="h-4 w-4" />

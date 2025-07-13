@@ -7,10 +7,6 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-12">
       <Card className="mx-auto max-w-md w-full">
         <CardHeader className="space-y-2 text-center">
-          {/* <div className="flex justify-center mb-2">
-            <PieChart className="h-10 w-10 text-primary" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Papillon</CardTitle> */}
           <img src="logo.png" alt="Logo" />
           <CardDescription>
             Entre com suas credenciais para acessar o sistema de controle de gastos de eventos.

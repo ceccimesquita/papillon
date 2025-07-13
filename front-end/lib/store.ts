@@ -51,7 +51,7 @@ export interface Budget {
   dataDoEvento: Date;
   dataLimite?: Date;
   notas?: string;
-  status: "pending" | "accepted" | "rejected";
+  status: "PENDENTE" | "ACEITO" | "REJEITADO";
   eventId?: string;
   funcionarios: Person[];
   cardapios: Menu[];
@@ -125,8 +125,8 @@ function toBudget(orcamento: orcamentosService.OrcamentoResponse): Budget {
     dataDoEvento: new Date(orcamento.dataDoEvento),
     dataLimite: orcamento.dataLimite ? new Date(orcamento.dataLimite) : undefined,
     notas: orcamento.notas,
-    status: orcamento.status === 'ACEITO' ? 'accepted' : 
-           orcamento.status === 'REJEITADO' ? 'rejected' : 'pending',
+    status: orcamento.status === 'ACEITO' ? 'ACEITO' : 
+           orcamento.status === 'REJEITADO' ? 'REJEITADO' : 'PENDENTE',
     eventId: orcamento.eventId?.toString(),
     funcionarios: orcamento.funcionarios,
     cardapios: orcamento.cardapios.map(menu => ({
