@@ -29,7 +29,7 @@ interface BudgetFormProps {
 export function BudgetForm({ budgetId, onError }: BudgetFormProps = {}) {
   const router = useRouter()
   const { toast } = useToast()
-  const { addBudget, getBudget, updateBudget } = useEventStore()
+  const {  getBudget, updateBudget } = useEventStore()
   const isEditing = !!budgetId
 
   // Estados para os campos do formulário
@@ -70,36 +70,52 @@ export function BudgetForm({ budgetId, onError }: BudgetFormProps = {}) {
 
   // Carregar dados do orçamento se estiver editando
   useEffect(() => {
+  const fetchBudget = async () => {
     if (isEditing && budgetId) {
-      const budget = getBudget(budgetId)
+      const budget = await getBudget(budgetId)
       if (budget) {
-        setClientName(budget.client.name)
-        setClientPhone(budget.client.phone || "")
-        setClientEmail(budget.client.email || "")
-        setClientDocument(budget.client.document || "")
-        setValue(budget.value.toString())
-        setPeopleCount(budget.peopleCount.toString())
-        setNotes(budget.notes || "")
-        setEventDate(new Date(budget.eventDate))
+        setClientName(budget.cliente.nome)
+        setClientPhone(budget.cliente.telefone || "")
+        setClientEmail(budget.cliente.email || "")
+        setClientDocument(budget.cliente.cpfCnpj || "")
+        setValue(budget.valorPorPessoa.toString())
+        setPeopleCount(budget.quantidadePessoas.toString())
+        setNotes(budget.notas || "")
+        setEventDate(new Date(budget.dataDoEvento))
 
-        // Carregar pessoas
-        if (budget.people && budget.people.length > 0) {
+        // Pessoas
+        if (budget.funcionarios?.length > 0) {
           setPeople(
-            budget.people.map((person) => ({
-              name: person.name,
-              role: person.role,
-              salary: person.salary.toString(),
-            })),
+            budget.funcionarios.map((f) => ({
+              name: f.nome,
+              role: f.funcao,
+              salary: f.valor.toString(),
+            }))
           )
         }
 
-        // Carregar cardápios
-        if (budget.menus && budget.menus.length > 0) {
-          setMenus(budget.menus)
+        // Cardápios
+        if (budget.cardapios?.length > 0) {
+          setMenus([
+            {
+              id: Date.now().toString(), // você pode gerar um ID melhor se quiser
+              name: budget.cardapios[0].nome,
+              items: [
+                {
+                  name: budget.cardapios[0].nome,
+                  type: budget.cardapios[0].tipo === "prato" ? "food" : "drink",
+                },
+              ],
+            },
+          ])
         }
       }
     }
-  }, [isEditing, budgetId, getBudget])
+  }
+
+  fetchBudget()
+}, [isEditing, budgetId, getBudget])
+
 
   // Adicionar um novo cardápio
   const addMenu = () => {
@@ -316,14 +332,13 @@ const handleSubmit = async (e: React.FormEvent) => {
     if (isEditing && budgetId) {
       const existingBudget = getBudget(budgetId)
       if (existingBudget) {
-        const updatedBudget = {
-          ...existingBudget,
-          // pode usar payload se quiser, adaptando os campos
-          value: Number.parseFloat(value),
-          peopleCount: Number.parseInt(peopleCount),
-          notes,
-          eventDate: eventDate as Date,
-        }
+        const updatedBudget: Budget = {
+  ...existingBudget,
+  valorPorPessoa: Number.parseFloat(value),
+  quantidadePessoas: Number.parseInt(peopleCount),
+  notes,
+  eventDate: eventDate as Date,
+}
         updateBudget(budgetId, updatedBudget)
         toast({ title: "Orçamento atualizado", description: "Atualização local concluída." })
         router.push("/orcamentos")
@@ -618,13 +633,13 @@ const handleSubmit = async (e: React.FormEvent) => {
 
                                 <div className="space-y-2">
                                   <label className="text-sm font-medium">Tipo</label>
-                                  <Select
-                                    value={item.type}
-                                    onValueChange={(value) =>
-                                      updateMenuItem(menu.id, itemIndex, "type", value as "food" | "drink")
-                                    }
-                                  >
-                                    <SelectTrigger>
+                                    <Select
+                                      value={item.type}
+                                      onValueChange={(value) =>
+                                        updateMenuItem(menu.id, itemIndex, "type", value as "food" | "drink")
+                                      }
+                                    >
+                                      <SelectTrigger>
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>

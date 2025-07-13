@@ -39,6 +39,7 @@ export default function BudgetDetailPage() {
   useEffect(() => {
   const fetchBudget = async () => {
     const data = await getBudget(budgetId)
+    console.log("Fetched budget:", data)
     setBudget(data)
   }
 
@@ -270,92 +271,74 @@ export default function BudgetDetailPage() {
         </Card>
       </div>
 
-      {/* Cardápios */}
       {budget.cardapios && budget.cardapios.length > 0 && (
-        <Card className="overflow-hidden mb-8">
-          <CardHeader className="bg-muted/50 pb-4 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center">
-                <Utensils className="mr-2 h-5 w-5" />
-                Cardápios
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <Tabs defaultValue={budget.cardapios[0].id} className="w-full">
-              <TabsList className="w-full flex overflow-x-auto">
-                {budget.cardapios.map((cardapio) => (
-                  <TabsTrigger key={cardapio.id} value={cardapio.id} className="flex-1">
-                    {cardapio.nome}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+  <Card className="overflow-hidden mb-8">
+    <CardHeader className="bg-muted/50 pb-4 flex flex-row items-center justify-between">
+      <div>
+        <CardTitle className="flex items-center">
+          <Utensils className="mr-2 h-5 w-5" />
+          Cardápios
+        </CardTitle>
+      </div>
+    </CardHeader>
+    <CardContent className="pt-6 space-y-10">
+      {/* Pratos */}
+      <div>
+        <h3 className="text-lg font-medium mb-4">Pratos</h3>
+        {budget.cardapios.filter(item => item.tipo === "prato").length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {budget.cardapios
+                  .filter(item => item.tipo === "prato")
+                  .map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.nome}</TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">Nenhum prato cadastrado.</p>
+        )}
+      </div>
 
-              {budget.cardapios.map((cardapio) => (
-                <TabsContent key={cardapio.id} value={cardapio.id} className="mt-4">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">Pratos</h3>
-                      {Array.isArray(cardapio.itens) && cardapio.itens.filter((item) => item.tipo === "prato").length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Descrição</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {cardapio.itens
-                                .filter((item) => item.tipo === "prato")
-                                .map((item, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell className="font-medium">{item.nome}</TableCell>
-                                    <TableCell>{item.descricao || '-'}</TableCell>
-                                  </TableRow>
-                                ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">Nenhum prato cadastrado neste cardápio.</p>
-                      )}
-                    </div>
+      {/* Bebidas */}
+      <div>
+        <h3 className="text-lg font-medium mb-4">Bebidas</h3>
+        {budget.cardapios.filter(item => item.tipo === "bebida").length > 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {budget.cardapios
+                  .filter(item => item.tipo === "bebida")
+                  .map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.nome}</TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">Nenhuma bebida cadastrada.</p>
+        )}
+      </div>
+    </CardContent>
+  </Card>
+)}
 
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">Bebidas</h3>
-                      {Array.isArray(cardapio.itens) && cardapio.itens.filter((item) => item.tipo === "bebida").length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Descrição</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {cardapio.itens
-                                .filter((item) => item.tipo === "bebida")
-                                .map((item, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell className="font-medium">{item.nome}</TableCell>
-                                    <TableCell>{item.descricao || '-'}</TableCell>
-                                  </TableRow>
-                                ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">Nenhuma bebida cadastrada neste cardápio.</p>
-                      )}
-                    </div>
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Seção de Funcionários */}
       <Card className="overflow-hidden mb-8">

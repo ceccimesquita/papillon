@@ -13,7 +13,8 @@ export interface MenuItem {
 
 export interface Menu {
   nome: string;
-  itens: MenuItem[];
+  tipo: "prato" | "bebida";
+  descricao?: string;
 }
 
 export interface Funcionario {

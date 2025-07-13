@@ -30,11 +30,13 @@ export interface MenuItem {
   tipo: "prato" | "bebida";
 }
 
+
 export interface Menu {
-  id: string;
   nome: string;
-  itens: MenuItem[];
+  tipo: "prato" | "bebida";
+  descricao?: string;
 }
+
 
 export interface Person {
   nome: string;
@@ -129,10 +131,7 @@ function toBudget(orcamento: orcamentosService.OrcamentoResponse): Budget {
            orcamento.status === 'REJEITADO' ? 'REJEITADO' : 'PENDENTE',
     eventId: orcamento.eventId?.toString(),
     funcionarios: orcamento.funcionarios,
-    cardapios: orcamento.cardapios.map(menu => ({
-      ...menu,
-      id: Date.now().toString(), // Ou gere um ID único
-    })),
+    cardapios: orcamento.cardapios,
     valorTotal: orcamento.valorTotal,
   };
 }
@@ -158,8 +157,6 @@ export const useEventStore = create<EventStore>()(
       lastUpdate: Date.now(),
       loading: false,
       error: null,
-
-      // ... (implemente as funções de evento existentes que você já tinha)
 
       // Implementação das funções de budget:
       fetchBudgets: async () => {
