@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.papillon.eventos.evento.dtos.EventoCreateDto;
 import br.com.papillon.eventos.evento.dtos.EventoShowDto;
+import br.com.papillon.eventos.evento.dtos.EventoSimpleDto;
 import br.com.papillon.eventos.evento.entities.Evento;
 import br.com.papillon.eventos.evento.exception.EventoNotFoundException;
 import br.com.papillon.eventos.evento.repositories.EventoRepository;
@@ -56,6 +57,13 @@ public class EventoService {
         return new EventoShowDto(ev);
     }
 
+    public List<EventoSimpleDto> getEventosSimplesByClienteId(Long clienteId) {
+        return eventoRepository.findByClienteId(clienteId).stream()
+            .map(EventoSimpleDto::new)
+            .collect(Collectors.toList());
+    }
+
+
     @Transactional
     public EventoShowDto updateEvento(Long id, EventoCreateDto dto) {
         Evento existente = eventoRepository.findById(id)
@@ -76,13 +84,12 @@ public class EventoService {
 
     @Transactional
     public EventoShowDto createFromOrcamento(Orcamento orc) {
-        // mapeia campos do orçamento para o DTO de criação de evento
         EventoCreateDto dto = new EventoCreateDto(
-                // você pode querer um nome especial, ou simplesmente reutilizar:
-                orc.getCliente().getNome() + " – Orçamento " + orc.getId(),
+                orc.getCliente().getNome(),
                 orc.getCliente().getId(),
                 orc.getDataDoEvento(),
-                orc.getValorTotal()
+                orc.getValorTotal(),
+                "Em andamento"
         );
         return createEvento(dto);
     }

@@ -2,6 +2,7 @@ package br.com.papillon.eventos.cliente.controller;
 import java.util.List;
 import java.util.Map;
 
+import br.com.papillon.eventos.cliente.dtos.ClienteDetailsDto;
 import br.com.papillon.eventos.cliente.dtos.ClienteDto;
 import br.com.papillon.eventos.cliente.entities.Cliente;
 import br.com.papillon.eventos.cliente.exceptions.ClienteAlreadyExistsException;
@@ -49,6 +50,13 @@ public class ClienteController {
         ClienteDto cliente = clienteService.getClienteById(id);
         return ResponseEntity.ok(Map.of("cliente", cliente));
     }
+
+    @GetMapping("/{id}/details")
+    public ResponseEntity<Map<String, ClienteDetailsDto>> getClienteDetails(@PathVariable Long id) {
+        ClienteDetailsDto dto = clienteService.getClienteDetailsById(id);
+        return ResponseEntity.ok(Map.of("cliente", dto));
+    }
+
 
     // Atualizar cliente por ID
     @PutMapping("/{id}")

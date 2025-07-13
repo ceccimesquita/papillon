@@ -43,6 +43,8 @@ public class Evento {
     private BigDecimal gastos;
     private BigDecimal lucro;
 
+    private String status;
+
     @OneToMany(mappedBy = "evento",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
@@ -58,6 +60,7 @@ public class Evento {
         this.valor    = dto.valor();
         this.gastos   = BigDecimal.ZERO;
         this.lucro    = BigDecimal.ZERO;
+        this.status   = dto.status(); 
         // insumos e funcionarios já instanciados como lista vazia
     }
 
