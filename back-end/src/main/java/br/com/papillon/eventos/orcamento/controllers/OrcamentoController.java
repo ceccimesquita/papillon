@@ -4,6 +4,7 @@ import java.util.List;
 
 import br.com.papillon.eventos.orcamento.dtos.OrcamentoCreateDto;
 import br.com.papillon.eventos.orcamento.dtos.OrcamentoShowDto;
+import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import br.com.papillon.eventos.orcamento.entities.OrcamentoStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import br.com.papillon.eventos.orcamento.services.OrcamentoService;
+import br.com.papillon.eventos.orcamento.services.PdfService;
 
 @RestController
 @RequestMapping("/api/orcamento")
@@ -20,6 +22,9 @@ public class OrcamentoController {
 
     @Autowired
     private OrcamentoService orcamentoService;
+
+    @Autowired
+    private PdfService pdfService;
 
     public OrcamentoController(OrcamentoService service) {
         this.service = service;
@@ -60,5 +65,17 @@ public class OrcamentoController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) {
+        Orcamento orcamento = orcamentoService.getEntityById(id); 
+        byte[] pdfBytes = pdfService.generatePdfFromOrcamento(orcamento);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=orcamento_" + id + ".pdf")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
 }
 

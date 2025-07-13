@@ -8,10 +8,8 @@ import org.springframework.stereotype.Service;
 import br.com.papillon.eventos.cardapios.dtos.CardapioCreateDto;
 import br.com.papillon.eventos.cardapios.dtos.CardapioDto;
 import br.com.papillon.eventos.cardapios.entities.Cardapio;
-import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import br.com.papillon.eventos.cardapios.exceptions.CardapioNotFoundException;
 import br.com.papillon.eventos.cardapios.repositories.CardapioRepository;
-import br.com.papillon.eventos.orcamento.repositories.OrcamentoRepository;
 
 @Service
 public class CardapioService {
@@ -19,21 +17,20 @@ public class CardapioService {
     @Autowired
     private CardapioRepository cardapioRepo;
 
-    @Autowired
-    private OrcamentoRepository orcamentoRepo;
-
     public CardapioDto create(CardapioCreateDto dto) {
-        Orcamento orcamento = orcamentoRepo.findById(dto.orcamentoId())
-            .orElseThrow(() -> new IllegalArgumentException("Orçamento não encontrado"));
+        Cardapio novo = Cardapio.builder()
+            .nome(dto.nome())
+            .itens(dto.itens()) // você deve transformar os itens do DTO em entidades e associar aqui
+            .build();
 
-        Cardapio novo = new Cardapio(null, dto.nome(), dto.tipo());
         cardapioRepo.save(novo);
         return new CardapioDto(novo);
     }
 
     public List<CardapioDto> listAll() {
         return cardapioRepo.findAll().stream()
-            .map(CardapioDto::new).toList();
+            .map(CardapioDto::new)
+            .toList();
     }
 
     public CardapioDto getById(Long id) {
@@ -43,9 +40,9 @@ public class CardapioService {
     }
 
     public void deleteById(Long id) {
-        if (!cardapioRepo.existsById(id))
+        if (!cardapioRepo.existsById(id)) {
             throw new CardapioNotFoundException(id);
+        }
         cardapioRepo.deleteById(id);
     }
 }
-

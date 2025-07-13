@@ -1,7 +1,9 @@
 package br.com.papillon.eventos.evento.entities;
 
+import br.com.papillon.eventos.cardapios.entities.Cardapio;
 import br.com.papillon.eventos.cliente.entities.Cliente;
 import br.com.papillon.eventos.evento.dtos.EventoCreateDto;
+import br.com.papillon.eventos.funcionario.entities.Funcionario;
 import br.com.papillon.eventos.insumos.entities.Insumo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -26,7 +28,6 @@ public class Evento {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank @Size(max = 150)
     private String nome;
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
@@ -39,7 +40,6 @@ public class Evento {
     @NotNull
     private BigDecimal valor;
 
-    // Esses campos começam em zero / vazios
     private BigDecimal gastos;
     private BigDecimal lucro;
 
@@ -51,6 +51,15 @@ public class Evento {
             fetch = FetchType.EAGER)
     @JsonIgnoreProperties("evento")
     private List<Insumo> insumos = new ArrayList<>();
+
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "evento_id", nullable = true) 
+    private List<Cardapio> cardapios;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "evento_id", nullable = true)
+    private List<Funcionario> funcionarios;
 
     // Construtor para criação a partir do DTO
     public Evento(EventoCreateDto dto, Cliente cliente) {

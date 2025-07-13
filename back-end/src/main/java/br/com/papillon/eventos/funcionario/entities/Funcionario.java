@@ -28,4 +28,11 @@ public class Funcionario {
         this.funcao          = dto.funcao();
         this.valor           = dto.valor();
     }
+
+    public Funcionario(Funcionario outro) {
+        this.nome = outro.getNome();
+        this.funcao = outro.getFuncao();
+        this.valor = outro.getValor();
+    }
+
 }

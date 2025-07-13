@@ -2,7 +2,6 @@ package br.com.papillon.eventos.evento.controllers;
 
 import br.com.papillon.eventos.evento.dtos.EventoCreateDto;
 import br.com.papillon.eventos.evento.dtos.EventoShowDto;
-import br.com.papillon.eventos.evento.entities.Evento;
 import br.com.papillon.eventos.evento.services.EventoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/eventos")
+@RequestMapping("/api/evento")
 public class EventoController {
 
     @Autowired

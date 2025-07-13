@@ -1,9 +1,12 @@
 package br.com.papillon.eventos.cardapios.dtos;
 
-import br.com.papillon.eventos.cardapios.entities.Cardapio;
+import java.util.List;
 
-public record CardapioDto(Long id, String nome, String tipo) {
+import br.com.papillon.eventos.cardapios.entities.Cardapio;
+import br.com.papillon.eventos.cardapios.entities.Item;
+
+public record CardapioDto(Long id, String nome, List<Item> tipo) {
     public CardapioDto(Cardapio c) {
-        this(c.getId(), c.getNome(), c.getTipo());
+        this(c.getId(), c.getNome(), c.getItens());
     }
 }

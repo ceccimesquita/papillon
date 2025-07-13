@@ -57,7 +57,6 @@ public class ClienteController {
         return ResponseEntity.ok(Map.of("cliente", dto));
     }
 
-
     // Atualizar cliente por ID
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Object>> updateClienteById(@PathVariable @NotNull Long id,

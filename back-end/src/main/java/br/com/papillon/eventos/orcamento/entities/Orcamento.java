@@ -60,11 +60,11 @@ public class Orcamento {
     private BigDecimal valorTotal;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "orcamento_id", nullable = false) // <== importante!
+    @JoinColumn(name = "orcamento_id", nullable = true) 
     private List<Cardapio> cardapios;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "orcamento_id", nullable = false)
+    @JoinColumn(name = "orcamento_id", nullable = true)
     private List<Funcionario> funcionarios;
 
     @Enumerated(EnumType.STRING)

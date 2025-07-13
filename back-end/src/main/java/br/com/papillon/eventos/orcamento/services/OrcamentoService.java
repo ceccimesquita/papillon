@@ -34,7 +34,6 @@ public class OrcamentoService {
         this.repo = repo;
         this.clienteService = clienteService;
         this.eventoService = eventoService;
-
     }
 
     @Transactional
@@ -57,6 +56,10 @@ public class OrcamentoService {
         return new OrcamentoShowDto(
                 repo.findById(id).orElseThrow(() -> new OrcamentoNotFoundException(id))
         );
+    }
+
+    public Orcamento getEntityById(Long id) {
+        return repo.findById(id).orElseThrow(() -> new OrcamentoNotFoundException(id));
     }
 
     @Transactional
@@ -83,7 +86,6 @@ public class OrcamentoService {
         existente.setStatus(novoStatus);
         Orcamento salvo = repo.save(existente);
 
-        // só cria evento quando passar de qualquer status para ACEITO
         if (antigo != OrcamentoStatus.ACEITO
                 && novoStatus == OrcamentoStatus.ACEITO) {
             eventoService.createFromOrcamento(salvo);
