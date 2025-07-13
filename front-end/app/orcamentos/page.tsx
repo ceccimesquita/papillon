@@ -8,6 +8,8 @@ import { useEventStore } from "@/lib/store"
 import { BudgetList } from "@/components/budget-list"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { pegarOrcamentos } from "@/lib/api/orcamentosService"
+
 export default function BudgetsPage() {
   const { budgets } = useEventStore()
 
