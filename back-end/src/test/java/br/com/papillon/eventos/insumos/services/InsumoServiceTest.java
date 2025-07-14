@@ -155,5 +155,15 @@ class InsumoServiceTest {
         assertEquals("Cartão", atualizado.metodoPagamento().nome());
         verify(insumoRepository).save(insumoExistente);
     }
+    @Test
+    void deleteInsumoById_quandoExiste_deveDeletar() {
+        Long id = 1L;
+
+        when(insumoRepository.existsById(id)).thenReturn(true);
+
+        insumoService.deleteInsumoById(id);
+
+        verify(insumoRepository).deleteById(id);
+    }
 
 }
