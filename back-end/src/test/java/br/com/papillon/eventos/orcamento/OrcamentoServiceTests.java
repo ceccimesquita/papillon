@@ -152,4 +152,13 @@ public class OrcamentoServiceTests {
 
         verify(orcamentoRepository).deleteById(5L);
     }
+
+    @Test
+    void testDelete_NotFound() {
+        when(orcamentoRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(OrcamentoNotFoundException.class, () -> {
+            orcamentoService.delete(99L);
+        });
+    }
 }
