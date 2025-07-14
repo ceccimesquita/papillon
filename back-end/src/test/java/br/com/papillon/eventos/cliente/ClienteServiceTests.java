@@ -91,4 +91,11 @@ class ClienteServiceTests {
 
         assertEquals("Carlos", dto.nome());
     }
+
+    @Test
+    void testGetClienteById_NotFound() {
+        when(clienteRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ClienteNotFoundException.class, () -> clienteService.getClienteById(99L));
+    }
 }
