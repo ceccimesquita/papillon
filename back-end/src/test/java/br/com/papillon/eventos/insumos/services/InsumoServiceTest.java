@@ -57,5 +57,31 @@ class InsumoServiceTest {
         assertNotNull(criado);
         verify(insumoRepository, times(1)).save(any());
     }
+    @Test
+    void listAllInsumos_deveRetornarListaDeDtos() {
+        MetodoPagamento mp = new MetodoPagamento();
+        mp.setId(1L);
+        mp.setNome("Cartão");
+        mp.setValor(BigDecimal.TEN);
+        mp.setData(LocalDate.now());
+
+        Evento evento = new Evento();
+        evento.setId(1L);
+
+        Insumo insumo = new Insumo();
+        insumo.setNome("Insumo 1");
+        insumo.setValor(BigDecimal.TEN);
+        insumo.setMetodoPagamento(mp);
+        insumo.setEvento(evento);
+
+        when(insumoRepository.findAll()).thenReturn(List.of(insumo));
+
+        List<InsumoDto> resultado = insumoService.listAllInsumos();
+
+        assertEquals(1, resultado.size());
+        assertEquals("Insumo 1", resultado.get(0).nome());
+        verify(insumoRepository).findAll();
+    }
+
 
 }
