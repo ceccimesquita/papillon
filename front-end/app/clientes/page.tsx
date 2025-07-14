@@ -15,34 +15,95 @@ import { useClientStore } from "@/lib/client-store"
 import { useEventStore } from "@/lib/store"
 import { PlusCircle, Search, User, Phone, Mail, FileText } from "lucide-react"
 import Link from "next/link"
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { ClientForm } from "@/components/client-form"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function ClientsPage() {
-  const { clients, getAllClients } = useClientStore()
+  const { clients, getAllClients, loading, error } = useClientStore()
   const { events } = useEventStore()
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddClientOpen, setIsAddClientOpen] = useState(false)
 
-  // Usar useMemo para filtrar clientes apenas quando necessário
+  // Load clients on initial render
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        await getAllClients()
+      } catch (err) {
+        console.error("Failed to load clients:", err)
+      }
+    }
+    
+    loadClients()
+  }, [getAllClients])
+
+  // Filter and sort clients
   const filteredClients = useMemo(() => {
-    const allClients = getAllClients()
-    if (!searchTerm.trim()) return allClients
+    if (!searchTerm.trim()) return clients
 
     const term = searchTerm.toLowerCase().trim()
-    return allClients.filter(
+    return clients.filter(
       (client) =>
         client.name.toLowerCase().includes(term) ||
         (client.email && client.email.toLowerCase().includes(term)) ||
         (client.phone && client.phone.toLowerCase().includes(term)) ||
-        (client.document && client.document.toLowerCase().includes(term)),
+        (client.document && client.document.toLowerCase().includes(term))
     )
-  }, [getAllClients, searchTerm])
+  }, [clients, searchTerm])
 
-  // Ordenar clientes por nome
   const sortedClients = useMemo(() => {
     return [...filteredClients].sort((a, b) => a.name.localeCompare(b.name))
   }, [filteredClients])
+
+  if (loading && clients.length === 0) {
+    return (
+      <div className="container mx-auto py-6 px-4 md:px-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <Skeleton className="h-10 w-64" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-48" />
+            <Skeleton className="h-10 w-36" />
+          </div>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Skeleton className="h-10 w-full" />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-6 px-4 md:px-6">
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <User className="h-12 w-12 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Erro ao carregar clientes</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            {error}
+          </p>
+          <Button onClick={() => getAllClients()}>
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto py-6 px-4 md:px-6">
@@ -74,9 +135,16 @@ export default function ClientsPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Adicionar Novo Cliente</DialogTitle>
-                <DialogDescription>Preencha os dados do cliente abaixo.</DialogDescription>
+                <DialogDescription>
+                  Preencha os dados do cliente abaixo.
+                </DialogDescription>
               </DialogHeader>
-              <ClientForm onSuccess={() => setIsAddClientOpen(false)} />
+              <ClientForm 
+                onSuccess={() => {
+                  setIsAddClientOpen(false)
+                  getAllClients() // Refresh the list after adding
+                }}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -85,11 +153,13 @@ export default function ClientsPage() {
       {sortedClients.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <User className="h-12 w-12 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Nenhum cliente encontrado</h2>
+          <h2 className="text-xl font-semibold mb-2">
+            {searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}
+          </h2>
           <p className="text-muted-foreground mb-6 max-w-md">
             {searchTerm
-              ? "Não encontramos nenhum cliente com os termos da sua busca. Tente outros termos."
-              : "Você ainda não tem clientes cadastrados. Adicione seu primeiro cliente para começar."}
+              ? "Não encontramos nenhum cliente com os termos da sua busca."
+              : "Comece adicionando seu primeiro cliente."}
           </p>
           <Button onClick={() => setIsAddClientOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -99,9 +169,8 @@ export default function ClientsPage() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sortedClients.map((client) => {
-            // Encontrar eventos associados a este cliente
             const clientEvents = events.filter(
-              (event) => event.client.id === client.id || (client.events && client.events.includes(event.id)),
+              (event) => event.cliente?.id === client.id || client.events?.includes(event.id)
             )
 
             return (
@@ -113,10 +182,8 @@ export default function ClientsPage() {
                   </CardTitle>
                   <CardDescription>
                     {clientEvents.length > 0
-                      ? `${clientEvents.length} evento${clientEvents.length > 1 ? "s" : ""} associado${
-                          clientEvents.length > 1 ? "s" : ""
-                        }`
-                      : "Nenhum evento associado"}
+                      ? `${clientEvents.length} evento${clientEvents.length > 1 ? "s" : ""}`
+                      : "Nenhum evento"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pb-3">

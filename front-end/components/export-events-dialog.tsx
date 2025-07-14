@@ -130,10 +130,8 @@ export function ExportEventsDialog({ open, onOpenChange }: ExportEventsDialogPro
                       onCheckedChange={() => handleSelectEvent(event.id)}
                     />
                     <Label htmlFor={`event-${event.id}`} className="flex-1 cursor-pointer">
-                      <div className="font-medium">{event.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {format(new Date(event.date), "PPP", { locale: ptBR })}
-                      </div>
+                      <div className="font-medium">{event.nome}</div>
+                      
                     </Label>
                   </div>
                 ))}

@@ -31,7 +31,7 @@ export function OverallBalanceChart() {
       eventBalance.total = eventBalance.budget - eventBalance.expenses
 
       return {
-        name: event.name.length > 15 ? event.name.substring(0, 15) + "..." : event.name,
+        name: event.nome.length > 15 ? event.nome.substring(0, 15) + "..." : event.nome,
         Orçamento: eventBalance.budget,
         Gastos: eventBalance.expenses,
         Saldo: eventBalance.total,

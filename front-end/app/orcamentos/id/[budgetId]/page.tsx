@@ -64,7 +64,7 @@ export default function BudgetDetailPage() {
 
   const handleAcceptBudget = async () => {
     try {
-      await updateBudgetStatus(budgetId, 'accepted')
+      await updateBudgetStatus(budgetId, 'ACEITO')
       setConfirmDialogOpen(false)
       
       toast({
@@ -87,7 +87,7 @@ export default function BudgetDetailPage() {
 
   const handleRejectBudget = async () => {
     try {
-      await updateBudgetStatus(budgetId, 'rejected')
+      await updateBudgetStatus(budgetId, 'RECUSADO')
       setRejectDialogOpen(false)
       
       toast({
@@ -110,13 +110,13 @@ export default function BudgetDetailPage() {
   const statusColors = {
     PENDENTE: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-100",
     ACEITO: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100",
-    REJEITADO: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100",
+    RECUSADO: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100",
   }
 
   const statusLabels = {
     PENDENTE: "PENDENTE",
     ACEITO: "ACEITO",
-    REJEITADO: "REJEITADO",
+    RECUSADO: "RECUSADO",
   }
 
   // Calcular o total de valores dos funcionários

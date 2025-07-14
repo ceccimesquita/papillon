@@ -111,4 +111,8 @@ export async function deletarOrcamento(id: number): Promise<void> {
     const errorText = await response.text();
     throw new Error(`Erro ${response.status}: ${errorText}`);
   }
+}     
+
+export function getOrcamentoById(arg0: number) {
+  throw new Error("Function not implemented.");
 }

@@ -106,23 +106,6 @@ export function AppSidebar() {
 
           <SidebarSeparator className="my-4" />
 
-          <div className="px-4 py-2">
-            <h3 className="text-xs font-medium text-muted-foreground">Importar/Exportar</h3>
-          </div>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setImportDialogOpen(true)} tooltip="Importar Eventos">
-                <Upload className="h-5 w-5 mr-3" />
-                <span>Importar Eventos</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => setExportDialogOpen(true)} tooltip="Exportar Eventos">
-                <Download className="h-5 w-5 mr-3" />
-                <span>Exportar Eventos</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
           <div className="p-4">
@@ -157,9 +140,6 @@ export function AppSidebar() {
           </div>
         </SidebarFooter>
       </Sidebar>
-
-      <ImportEventsDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} />
-      <ExportEventsDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen} />
     </>
   )
 }
