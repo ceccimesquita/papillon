@@ -123,4 +123,24 @@ public class OrcamentoServiceTests {
             orcamentoService.getById(1L);
         });
     }
+
+    @Test
+    void testChangeStatus() {
+        Orcamento o = new Orcamento();
+        o.setId(1L);
+        o.setCliente(mockCliente());
+        o.setStatus(OrcamentoStatus.PENDENTE);
+
+        when(orcamentoRepository.findById(1L)).thenReturn(Optional.of(o));
+        when(orcamentoRepository.save(any())).thenAnswer(invocation -> {
+            Orcamento saved = invocation.getArgument(0);
+            saved.setStatus(OrcamentoStatus.ACEITO);
+            return saved;
+        });
+
+        var result = orcamentoService.changeStatus(1L, OrcamentoStatus.ACEITO);
+
+        assertEquals("ACEITO", result.status());
+        verify(eventoService).createFromOrcamento(any());
+    }
 }
