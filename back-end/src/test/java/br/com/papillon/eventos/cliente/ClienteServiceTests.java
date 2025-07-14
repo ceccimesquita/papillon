@@ -98,4 +98,21 @@ class ClienteServiceTests {
 
         assertThrows(ClienteNotFoundException.class, () -> clienteService.getClienteById(99L));
     }
+
+    @Test
+    void testGetClienteDetailsById() {
+        Cliente cliente = buildCliente("Laura", "44444444444", "laura@email.com", "Icó");
+        List<EventoSimpleDto> eventos = List.of(
+                new EventoSimpleDto(1L, "Aniversário", LocalDate.of(2025, 7, 20), "Salão X")
+        );
+
+        when(clienteRepository.findById(2L)).thenReturn(Optional.of(cliente));
+        when(eventoService.getEventosSimplesByClienteId(2L)).thenReturn(eventos);
+
+        ClienteDetailsDto detalhes = clienteService.getClienteDetailsById(2L);
+
+        assertEquals("Laura", detalhes.nome());
+        assertEquals(1, detalhes.eventos().size());
+        assertEquals("Aniversário", detalhes.eventos().get(0).nome());
+    }
 }
