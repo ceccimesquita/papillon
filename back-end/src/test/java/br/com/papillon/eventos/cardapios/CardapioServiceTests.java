@@ -44,4 +44,17 @@ class CardapioServiceTests {
         assertEquals("Almoço", result.nome());
         verify(cardapioRepository, times(1)).save(any(Cardapio.class));
     }
+
+    @Test
+    void testListAll() {
+        Cardapio c1 = Cardapio.builder().nome("Café").itens(new ArrayList<>()).build();
+        Cardapio c2 = Cardapio.builder().nome("Jantar").itens(new ArrayList<>()).build();
+        when(cardapioRepository.findAll()).thenReturn(List.of(c1, c2));
+
+        List<CardapioDto> lista = cardapioService.listAll();
+
+        assertEquals(2, lista.size());
+        assertEquals("Café", lista.get(0).nome());
+        assertEquals("Jantar", lista.get(1).nome());
+    }
 }
