@@ -81,4 +81,23 @@ public class OrcamentoServiceTests {
         assertEquals(1L, result.id());
     }
 
+
+    @Test
+    void testListAll() {
+        Orcamento o1 = new Orcamento();
+        o1.setId(1L);
+        o1.setCliente(mockCliente());
+        o1.setStatus(OrcamentoStatus.PENDENTE);
+
+        Orcamento o2 = new Orcamento();
+        o2.setId(2L);
+        o2.setCliente(mockCliente());
+        o2.setStatus(OrcamentoStatus.PENDENTE);
+
+        when(orcamentoRepository.findAll()).thenReturn(List.of(o1, o2));
+
+        var result = orcamentoService.listAll();
+
+        assertEquals(2, result.size());
+    }
 }
