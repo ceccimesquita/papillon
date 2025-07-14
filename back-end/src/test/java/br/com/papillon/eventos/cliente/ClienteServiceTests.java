@@ -132,4 +132,13 @@ class ClienteServiceTests {
 
         assertEquals("Novo Nome", atualizado.nome());
     }
+
+    @Test
+    void testDeleteClienteById_Success() {
+        when(clienteRepository.existsById(8L)).thenReturn(true);
+
+        clienteService.deleteClienteById(8L);
+
+        verify(clienteRepository).deleteById(8L);
+    }
 }
