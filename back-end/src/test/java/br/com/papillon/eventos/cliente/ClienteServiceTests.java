@@ -148,4 +148,16 @@ class ClienteServiceTests {
 
         assertThrows(ClienteNotFoundException.class, () -> clienteService.deleteClienteById(123L));
     }
+
+    @Test
+    void testGetByCpfCnpjOrCreate_Found() {
+        Cliente existente = buildCliente("Existente", "66666666666", "existente@email.com", "Caucaia");
+        when(clienteRepository.findByCpfCnpj("66666666666")).thenReturn(Optional.of(existente));
+
+        ClienteDto dto = new ClienteDto(existente);
+        Cliente resultado = clienteService.getByCpfCnpjOrCreate(dto);
+
+        assertEquals("Existente", resultado.getNome());
+        verify(clienteRepository, never()).save(any());
+    }
 }
