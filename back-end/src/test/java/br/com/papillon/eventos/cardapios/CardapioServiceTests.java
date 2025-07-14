@@ -57,4 +57,14 @@ class CardapioServiceTests {
         assertEquals("Café", lista.get(0).nome());
         assertEquals("Jantar", lista.get(1).nome());
     }
+
+    @Test
+    void testGetByIdExists() {
+        Cardapio c = Cardapio.builder().nome("Feijoada").itens(new ArrayList<>()).build();
+        when(cardapioRepository.findById(1L)).thenReturn(Optional.of(c));
+
+        CardapioDto dto = cardapioService.getById(1L);
+
+        assertEquals("Feijoada", dto.nome());
+    }
 }
