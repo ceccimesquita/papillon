@@ -143,4 +143,13 @@ public class OrcamentoServiceTests {
         assertEquals("ACEITO", result.status());
         verify(eventoService).createFromOrcamento(any());
     }
+
+    @Test
+    void testDelete_Success() {
+        when(orcamentoRepository.existsById(5L)).thenReturn(true);
+
+        orcamentoService.delete(5L);
+
+        verify(orcamentoRepository).deleteById(5L);
+    }
 }
