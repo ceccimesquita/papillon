@@ -58,5 +58,13 @@ class ClienteServiceTests {
         verify(clienteRepository).save(any());
     }
 
+    @Test
+    void testRegisterCliente_AlreadyExists() {
+        Cliente cliente = buildCliente("Maria", "99999999999", "maria@email.com", "Sobral");
 
+        when(clienteRepository.existsByCpfCnpj(cliente.getCpfCnpj())).thenReturn(true);
+
+        ClienteDto dto = new ClienteDto(cliente);
+        assertThrows(ClienteAlreadyExistsException.class, () -> clienteService.registerCliente(dto));
+    }
 }
