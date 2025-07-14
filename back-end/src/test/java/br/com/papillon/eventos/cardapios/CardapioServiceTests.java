@@ -67,4 +67,11 @@ class CardapioServiceTests {
 
         assertEquals("Feijoada", dto.nome());
     }
+
+    @Test
+    void testGetByIdNotFound() {
+        when(cardapioRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(CardapioNotFoundException.class, () -> cardapioService.getById(99L));
+    }
 }
