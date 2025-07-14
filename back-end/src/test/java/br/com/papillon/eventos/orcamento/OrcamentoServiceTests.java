@@ -114,4 +114,13 @@ public class OrcamentoServiceTests {
 
         assertEquals(10L, result.id());
     }
+
+    @Test
+    void testGetById_NotFound() {
+        when(orcamentoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(OrcamentoNotFoundException.class, () -> {
+            orcamentoService.getById(1L);
+        });
+    }
 }
