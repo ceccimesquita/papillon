@@ -67,4 +67,18 @@ class ClienteServiceTests {
         ClienteDto dto = new ClienteDto(cliente);
         assertThrows(ClienteAlreadyExistsException.class, () -> clienteService.registerCliente(dto));
     }
+
+    @Test
+    void testListAllClientes() {
+        Cliente c1 = buildCliente("Ana", "11111111111", "ana@email.com", "Juazeiro");
+        Cliente c2 = buildCliente("Pedro", "22222222222", "pedro@email.com", "Crato");
+
+        when(clienteRepository.findAll()).thenReturn(List.of(c1, c2));
+
+        List<ClienteDto> resultado = clienteService.listAllClientes();
+
+        assertEquals(2, resultado.size());
+        assertEquals("Ana", resultado.get(0).nome());
+        assertEquals("Pedro", resultado.get(1).nome());
+    }
 }
