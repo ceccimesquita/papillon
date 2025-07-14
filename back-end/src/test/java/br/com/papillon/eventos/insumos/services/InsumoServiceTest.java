@@ -111,5 +111,49 @@ class InsumoServiceTest {
         assertEquals(BigDecimal.TEN, dto.metodoPagamento().valor());
     }
 
+    @Test
+    void updateInsumoById_deveAtualizarCamposDoInsumo() {
+        // Setup dos mocks existentes
+        MetodoPagamento mp = new MetodoPagamento();
+        mp.setId(1L);
+        mp.setNome("Boleto");
+        mp.setValor(BigDecimal.valueOf(20));
+        mp.setData(LocalDate.of(2025, 1, 1));
+
+        Evento eventoOriginal = new Evento();
+        eventoOriginal.setId(1L);
+
+        Evento eventoNovo = new Evento();
+        eventoNovo.setId(2L);
+
+        Insumo insumoExistente = new Insumo();
+        insumoExistente.setId(100L);
+        insumoExistente.setNome("Insumo Original");
+        insumoExistente.setValor(BigDecimal.valueOf(30));
+        insumoExistente.setMetodoPagamento(mp);
+        insumoExistente.setEvento(eventoOriginal);
+
+        MetodoPagamentoDto mpDtoAtualizado = new MetodoPagamentoDto(
+            1L, "Cartão", BigDecimal.TEN, LocalDate.now()
+        );
+
+        InsumoDto dtoAtualizado = new InsumoDto(
+            100L, "Insumo Atualizado", BigDecimal.TEN, mpDtoAtualizado, 2L
+        );
+
+        // Mock dos repositórios
+        when(insumoRepository.findById(100L)).thenReturn(Optional.of(insumoExistente));
+        when(eventoRepository.findById(2L)).thenReturn(Optional.of(eventoNovo));
+        when(insumoRepository.save(any())).thenReturn(insumoExistente);
+
+        // Chamada do método
+        InsumoDto atualizado = insumoService.updateInsumoById(100L, dtoAtualizado);
+
+        // Verificações
+        assertNotNull(atualizado);
+        assertEquals("Insumo Atualizado", atualizado.nome());
+        assertEquals("Cartão", atualizado.metodoPagamento().nome());
+        verify(insumoRepository).save(insumoExistente);
+    }
 
 }
