@@ -141,4 +141,11 @@ class ClienteServiceTests {
 
         verify(clienteRepository).deleteById(8L);
     }
+
+    @Test
+    void testDeleteClienteById_NotFound() {
+        when(clienteRepository.existsById(123L)).thenReturn(false);
+
+        assertThrows(ClienteNotFoundException.class, () -> clienteService.deleteClienteById(123L));
+    }
 }
