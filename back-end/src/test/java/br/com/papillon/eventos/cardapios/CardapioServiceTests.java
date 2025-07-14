@@ -83,4 +83,11 @@ class CardapioServiceTests {
 
         verify(cardapioRepository).deleteById(1L);
     }
+
+    @Test
+    void testDeleteByIdNotFound() {
+        when(cardapioRepository.existsById(2L)).thenReturn(false);
+
+        assertThrows(CardapioNotFoundException.class, () -> cardapioService.deleteById(2L));
+    }
 }
