@@ -160,4 +160,17 @@ class ClienteServiceTests {
         assertEquals("Existente", resultado.getNome());
         verify(clienteRepository, never()).save(any());
     }
+
+    @Test
+    void testGetByCpfCnpjOrCreate_CreateNew() {
+        Cliente novo = buildCliente("Novo", "77777777777", "novo@email.com", "Horizonte");
+        when(clienteRepository.findByCpfCnpj("77777777777")).thenReturn(Optional.empty());
+        when(clienteRepository.save(any())).thenReturn(novo);
+
+        ClienteDto dto = new ClienteDto(novo);
+        Cliente resultado = clienteService.getByCpfCnpjOrCreate(dto);
+
+        assertEquals("Novo", resultado.getNome());
+        verify(clienteRepository).save(any());
+    }
 }
