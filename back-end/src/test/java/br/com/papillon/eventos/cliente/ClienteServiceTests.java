@@ -115,4 +115,21 @@ class ClienteServiceTests {
         assertEquals(1, detalhes.eventos().size());
         assertEquals("Aniversário", detalhes.eventos().get(0).nome());
     }
+
+    @Test
+    void testUpdateClienteById() {
+        Cliente clienteExistente = buildCliente("Velho Nome", "55555555555", "velho@email.com", "Tauá");
+        clienteExistente.setId(10L);
+
+        Cliente clienteNovo = buildCliente("Novo Nome", "55555555555", "novo@email.com", "Tauá");
+        clienteNovo.setId(10L);
+
+        when(clienteRepository.findById(10L)).thenReturn(Optional.of(clienteExistente));
+        when(clienteRepository.save(any())).thenReturn(clienteNovo);
+
+        ClienteDto dto = new ClienteDto(clienteNovo);
+        ClienteDto atualizado = clienteService.updateClienteById(10L, dto);
+
+        assertEquals("Novo Nome", atualizado.nome());
+    }
 }
