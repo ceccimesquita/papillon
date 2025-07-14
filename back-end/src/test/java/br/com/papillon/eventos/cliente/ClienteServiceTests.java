@@ -81,4 +81,14 @@ class ClienteServiceTests {
         assertEquals("Ana", resultado.get(0).nome());
         assertEquals("Pedro", resultado.get(1).nome());
     }
+
+    @Test
+    void testGetClienteById_Found() {
+        Cliente cliente = buildCliente("Carlos", "33333333333", "carlos@email.com", "Fortaleza");
+        when(clienteRepository.findById(1L)).thenReturn(Optional.of(cliente));
+
+        ClienteDto dto = clienteService.getClienteById(1L);
+
+        assertEquals("Carlos", dto.nome());
+    }
 }
