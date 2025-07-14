@@ -83,5 +83,33 @@ class InsumoServiceTest {
         verify(insumoRepository).findAll();
     }
 
+    @Test
+    void getInsumoById_quandoExiste_deveRetornarDto() {
+        MetodoPagamento mp = new MetodoPagamento();
+        mp.setId(1L);
+        mp.setNome("Pix");
+        mp.setValor(BigDecimal.TEN);
+        mp.setData(LocalDate.now());
+
+        Evento evento = new Evento();
+        evento.setId(1L);
+
+        Insumo insumo = new Insumo();
+        insumo.setId(10L);
+        insumo.setNome("Insumo Teste");
+        insumo.setValor(BigDecimal.TEN);
+        insumo.setMetodoPagamento(mp);
+        insumo.setEvento(evento);
+
+        when(insumoRepository.findById(10L)).thenReturn(Optional.of(insumo));
+
+        InsumoDto dto = insumoService.getInsumoById(10L);
+
+        assertNotNull(dto);
+        assertEquals("Insumo Teste", dto.nome());
+        assertEquals("Pix", dto.metodoPagamento().nome());
+        assertEquals(BigDecimal.TEN, dto.metodoPagamento().valor());
+    }
+
 
 }
