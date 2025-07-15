@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,10 +8,60 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuthStore } from "@/lib/auth-store"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 
+interface AuthResponse {
+  token: string
+  email: string
+  name: string
+}
+
+interface LoginCredentials {
+  username: string
+  password: string
+}
+
+interface ErrorResponse {
+  message?: string
+  error?: string
+  statusCode?: number
+}
+
+async function apiLogin(credentials: LoginCredentials): Promise<AuthResponse> {
+  const response = await fetch("http://localhost:8080/api/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(credentials),
+  })
+
+  if (!response.ok) {
+    let errorMessage = "Credenciais inválidas"
+    alert("Login Invalido")
+    
+    try {
+      const errorData: ErrorResponse = await response.json()
+      errorMessage = errorData.message || errorData.error || errorMessage
+      
+      if (response.status === 403) {
+        errorMessage = `Acesso não autorizado: ${errorMessage}`
+      }
+    } catch (e) {
+      console.error("Failed to parse error response", e)
+      if (response.status === 403) {
+        errorMessage = "Acesso proibido. Verifique suas credenciais."
+      }
+    }
+
+    throw new Error(errorMessage)
+  }
+
+  return await response.json()
+}
+
 export function LoginForm() {
   const router = useRouter()
   const { toast } = useToast()
-  const { login } = useAuthStore()
+  const { login: authStoreLogin } = useAuthStore()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
@@ -21,10 +69,9 @@ export function LoginForm() {
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     let isValid = true
 
-    // Validar email
     if (!email) {
       setEmailError("O email é obrigatório")
       isValid = false
@@ -35,7 +82,6 @@ export function LoginForm() {
       setEmailError("")
     }
 
-    // Validar senha
     if (!password) {
       setPasswordError("A senha é obrigatória")
       isValid = false
@@ -52,44 +98,42 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     setIsLoading(true)
 
     try {
-      // Simular uma verificação de credenciais
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await apiLogin({
+        username: email,
+        password: password
+      })
 
-      // Verificar credenciais (substitua por suas credenciais reais)
-      const validEmail = "admin@papillon.com"
-      const validPassword = "123456"
+      localStorage.setItem("token", response.token)
+      authStoreLogin({
+        email: response.email,
+        name: response.name
+      })
 
-      if (email === validEmail && password === validPassword) {
-        login({
-          email: email,
-          name: "Administrador",
-        })
+      toast({
+        title: "Login realizado com sucesso",
+        description: "Bem-vindo ao sistema Papillon.",
+      })
 
-        toast({
-          title: "Login realizado com sucesso",
-          description: "Bem-vindo ao sistema Papillon.",
-        })
-
-        router.push("/")
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Erro ao fazer login",
-          description: "Email ou senha incorretos. Tente novamente.",
-        })
+      router.push("/")
+    } catch (error: unknown) {
+      console.error("Erro no login:", error)
+      
+      let errorMessage = "Ocorreu um erro ao tentar fazer login"
+      
+      if (error instanceof Error) {
+        errorMessage = error.message
       }
-    } catch (error) {
+
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: "Ocorreu um erro ao tentar fazer login. Tente novamente.",
+        description: errorMessage,
+        duration: 5000
       })
     } finally {
       setIsLoading(false)
@@ -136,7 +180,9 @@ export function LoginForm() {
             ) : (
               <EyeIcon className="h-4 w-4 text-muted-foreground" />
             )}
-            <span className="sr-only">{showPassword ? "Esconder senha" : "Mostrar senha"}</span>
+            <span className="sr-only">
+              {showPassword ? "Esconder senha" : "Mostrar senha"}
+            </span>
           </Button>
         </div>
         {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}

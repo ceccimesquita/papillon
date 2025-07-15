@@ -10,7 +10,8 @@ import {
   deleteClienteById,
   ClienteDto,
   ClienteDetailsDto,
-  ApiResponse
+  ApiResponse,
+  fetchClienteDetails
 } from "./api/clienteService"
 
 export interface Client {
@@ -251,3 +252,27 @@ export async function syncClientWithEvent(clientData: any, eventId: string) {
     throw error
   }
 }
+
+interface ClientDetailsStore {
+  clientDetails: ClienteDetailsDto | null
+  loading: boolean
+  error: string | null
+  loadClientDetails: (id: number) => Promise<void>
+}
+
+export const useClientDetailsStore = create<ClientDetailsStore>((set) => ({
+  clientDetails: null,
+  loading: false,
+  error: null,
+
+  loadClientDetails: async (id: number) => {
+    set({ loading: true, error: null })
+    try {
+      const details = await fetchClienteDetails(id)
+      if (!details) throw new Error("Detalhes não encontrados")
+      set({ clientDetails: details, loading: false })
+    } catch (error: any) {
+      set({ error: error.message || "Erro ao carregar detalhes", loading: false })
+    }
+  },
+}))
