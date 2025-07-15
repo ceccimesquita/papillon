@@ -13,8 +13,7 @@ export interface MenuItem {
 
 export interface Menu {
   nome: string;
-  tipo: "prato" | "bebida";
-  descricao?: string;
+  itens: MenuItem[];
 }
 
 export interface Funcionario {
@@ -31,7 +30,6 @@ export interface OrcamentoPayload {
   dataLimite?: string;
   cardapios: Menu[];
   funcionarios: Funcionario[];
-  notas?: string;
 }
 
 export interface OrcamentoResponse extends OrcamentoPayload {
@@ -129,4 +127,18 @@ export async function deletarOrcamento(id: number): Promise<void> {
 
 export function getOrcamentoById(arg0: number) {
   throw new Error("Function not implemented.");
+}
+
+export async function downloadPdfOrcamento(id: string): Promise<Blob> {
+  const response = await fetch(`http://localhost:8080/api/orcamento/${id}/pdf`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });   
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Erro ${response.status}: ${errorText}`);
+  }
+  return response.blob();
 }

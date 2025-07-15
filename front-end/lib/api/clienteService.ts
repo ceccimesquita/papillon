@@ -61,6 +61,10 @@ export async function listAllClientes(): Promise<ApiResponse<ClienteDto[]>> {
   try {
     const response = await fetch("http://localhost:8080/api/cliente", {
       method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     });
 
     if (!response.ok) {
@@ -78,6 +82,10 @@ export async function getClienteById(id: number): Promise<ApiResponse<ClienteDto
   try {
     const response = await fetch(`http://localhost:8080/api/cliente/${id}`, {
       method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     });
 
     if (!response.ok) {
@@ -95,6 +103,10 @@ export async function getClienteDetails(id: number): Promise<ApiResponse<Cliente
   try {
     const response = await fetch(`http://localhost:8080/api/cliente/${id}/details`, {
       method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },    
     });
 
     if (!response.ok) {
@@ -134,6 +146,10 @@ export async function deleteClienteById(id: number): Promise<ApiResponse<void>> 
   try {
     const response = await fetch(`http://localhost:8080/api/cliente/${id}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },  
     });
 
     if (!response.ok) {
@@ -150,7 +166,13 @@ export async function deleteClienteById(id: number): Promise<ApiResponse<void>> 
 
 export async function fetchClienteDetails(id: number): Promise<ClienteDetailsDto | null> {
   try {
-    const response = await fetch(`http://localhost:8080/api/cliente/${id}/details`)
+    const response = await fetch(`http://localhost:8080/api/cliente/${id}/details`,{
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
     if (!response.ok) {
       const errorText = await response.text()
       throw new Error(`Erro ${response.status}: ${errorText}`)

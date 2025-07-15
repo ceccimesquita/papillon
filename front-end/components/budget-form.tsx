@@ -96,18 +96,18 @@ export function BudgetForm({ budgetId, onError }: BudgetFormProps = {}) {
 
         // Cardápios
         if (budget.cardapios?.length > 0) {
-          setMenus([
-            {
-              id: Date.now().toString(), // você pode gerar um ID melhor se quiser
-              name: budget.cardapios[0].nome,
-              items: [
-                {
-                  name: budget.cardapios[0].nome,
-                  type: budget.cardapios[0].tipo === "prato" ? "food" : "drink",
-                },
-              ],
-            },
-          ])
+          setMenus(
+            budget.cardapios.map((cardapio) => ({
+              id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
+              name: cardapio.nome,
+              items: cardapio.itens
+                ? cardapio.itens.map((item) => ({
+                    name: item.nome,
+                    type: item.tipo === "prato" ? "food" : "drink",
+                  }))
+                : [],
+            }))
+          )
         }
       }
     }
@@ -307,18 +307,19 @@ const handleSubmit = async (e: React.FormEvent) => {
       cpfCnpj: clientDocument || undefined,
       telefone: clientPhone || undefined,
     },
-    dataDoEvento: eventDate?.toISOString().split("T")[0],
+    dataDoEvento: eventDate ? eventDate.toISOString().split("T")[0] : "",
     quantidadePessoas: Number.parseInt(peopleCount),
     valorPorPessoa: Number.parseFloat(value),
-    dataLimite: eventDate?.toISOString().split("T")[0], // ou outro campo se tiver
-    cardapios: menus.flatMap((menu) =>
-      menu.items
+    dataLimite: eventDate ? eventDate.toISOString().split("T")[0] : "", // ou outro campo se tiver
+    cardapios: menus.map((menu) => ({
+      nome: menu.name,
+      itens: menu.items
         .filter((item) => item.name.trim() !== "")
         .map((item) => ({
           nome: item.name,
-          tipo: item.type === "food" ? "prato" : "bebida",
-        }))
-    ),
+          tipo: (item.type === "food" ? "prato" : "bebida") as "prato" | "bebida",
+        })),
+    })),
     funcionarios: people
       .filter((p) => p.name.trim() !== "")
       .map((p) => ({
@@ -329,22 +330,21 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 
   try {
-    if (isEditing && budgetId) {
-      const existingBudget = getBudget(budgetId)
-      if (existingBudget) {
-        const updatedBudget: Budget = {
-  ...existingBudget,
-  valorPorPessoa: Number.parseFloat(value),
-  quantidadePessoas: Number.parseInt(peopleCount),
-  notes,
-  eventDate: eventDate as Date,
-}
-        updateBudget(budgetId, updatedBudget)
-        toast({ title: "Orçamento atualizado", description: "Atualização local concluída." })
-        router.push("/orcamentos")
-      }
-    } else {
-      await enviarOrcamento(payload)
+if (isEditing && budgetId) {
+  const existingBudget = await getBudget(budgetId)
+  if (existingBudget) {
+    const updatedBudget: Budget = {
+      ...existingBudget,
+      valorPorPessoa: Number.parseFloat(value),
+      quantidadePessoas: Number.parseInt(peopleCount),
+      dataDoEvento: eventDate as Date,
+    }
+    updateBudget(budgetId, updatedBudget)
+    toast({ title: "Orçamento atualizado", description: "Atualização local concluída." })
+    router.push("/orcamentos")
+  }
+} else {
+  await enviarOrcamento(payload)
 
       toast({ title: "Orçamento enviado", description: "O orçamento foi enviado com sucesso." })
       router.push("/orcamentos")
@@ -622,7 +622,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                                   <Input
                                     placeholder={item.type === "food" ? "Ex: Filé Mignon" : "Ex: Vinho Tinto"}
                                     value={item.name}
-                                    onChange={(e) => updateMenuItem(menu.id, itemIndex, "name", e.target.value)}
+                                    onChange={(e) => updateMenuItem(menu.id, itemIndex, "name" as keyof MenuItem, e.target.value)}
                                   />
                                   {errors[`menuItemName-${menuIndex}-${itemIndex}`] && (
                                     <p className="text-sm text-red-500">
@@ -636,7 +636,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                                     <Select
                                       value={item.type}
                                       onValueChange={(value) =>
-                                        updateMenuItem(menu.id, itemIndex, "type", value as "food" | "drink")
+                                        updateMenuItem(menu.id, itemIndex, "type" as keyof MenuItem, value as "food" | "drink")
                                       }
                                     >
                                       <SelectTrigger>

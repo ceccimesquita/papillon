@@ -33,8 +33,7 @@ export interface MenuItem {
 
 export interface Menu {
   nome: string;
-  tipo: "prato" | "bebida";
-  descricao?: string;
+  itens: MenuItem[];
 }
 
 export interface Person {
@@ -68,7 +67,6 @@ export interface Event {
   status: EventStatus;
   cliente: Client;
   quantidadePessoas?: number;
-  notas?: string;
   funcionarios?: Person[];
   cardapios?: Menu[];
 }
@@ -128,7 +126,6 @@ function toBudget(orcamento: orcamentosService.OrcamentoResponse): Budget {
     quantidadePessoas: orcamento.quantidadePessoas,
     dataDoEvento: new Date(orcamento.dataDoEvento),
     dataLimite: orcamento.dataLimite ? new Date(orcamento.dataLimite) : undefined,
-    notas: orcamento.notas,
     status: orcamento.status,
     eventId: orcamento.eventId?.toString(),
     funcionarios: orcamento.funcionarios,
@@ -146,7 +143,6 @@ function toOrcamentoPayload(budget: Partial<Budget>): orcamentosService.Orcament
     dataLimite: budget.dataLimite?.toISOString(),
     cardapios: budget.cardapios || [],
     funcionarios: budget.funcionarios || [],
-    notas: budget.notas,
   };
 }
 
@@ -156,7 +152,6 @@ function toEventDto(event: Partial<Event>): eventoService.EventoCreateDto {
     dataEvento: event.data!.toISOString(),
     clienteId: parseInt(event.cliente?.id || '0'),
     orcamentoId: event.id ? parseInt(event.id) : undefined,
-    descricao: event.notas,
     // Add other properties as needed
   };
 }
@@ -174,8 +169,7 @@ function fromEventDto(dto: eventoService.EventoShowDto): Event {
       nome: dto.cliente.nome,
       email: dto.cliente.email,
     },
-    quantidadePessoas: (dto.orcamento && 'quantidadePessoas' in dto.orcamento) ? (dto.orcamento as any).quantidadePessoas : undefined,
-    notas: dto.descricao,
+    quantidadePessoas: (dto.orcamento && 'quantidadePessoas' in dto.orcamento) ? (dto.orcamento as any).quantidadePessoas : undefined
     // Add other properties as needed
   };
 }
