@@ -29,6 +29,7 @@ export interface EventoShowDto {
   createdAt: string;
   updatedAt?: string;
   qtdPessoas?: number;
+  valor: number
 }
 
 export async function createEvento(eventoDto: EventoCreateDto): Promise<EventoShowDto> {

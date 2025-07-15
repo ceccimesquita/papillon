@@ -24,6 +24,8 @@ import { SimplifiedExpenseForm } from "@/components/simplified-expense-form"
 import { useClientStore } from "@/lib/client-store"
 import { useToast } from "@/components/ui/use-toast"
 import { EventSummary } from "@/components/event-summary"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 export default function EventPage() {
   const params = useParams()
@@ -121,7 +123,7 @@ export default function EventPage() {
         <Card className="overflow-hidden">
           <CardHeader className="bg-muted/50 pb-2">
             <CardDescription>Pagamentos</CardDescription>
-            <CardTitle className="text-2xl text-blue-600">R$ {balance.budget.toFixed(2)}</CardTitle>
+            <CardTitle className="text-2xl text-blue-600">R$ {(event?.valor ?? 0) * (event?.qtdPessoas ?? 0)}</CardTitle>
           </CardHeader>
         </Card>
         <Card className="overflow-hidden">
@@ -134,7 +136,7 @@ export default function EventPage() {
           <CardHeader className="bg-muted/50 pb-2">
             <CardDescription>Saldo</CardDescription>
             <CardTitle className={`text-2xl ${balance.total >= 0 ? "text-green-600" : "text-red-600"}`}>
-              R$ {balance.total.toFixed(2)}
+              R$ {(((event?.valor ?? 0) * (event?.qtdPessoas ?? 0)) - Number(balance.expenses)).toFixed(2)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -182,20 +184,31 @@ export default function EventPage() {
         </Card>
 
         <Card className="overflow-hidden">
-          <CardHeader className="bg-muted/50 pb-4">
-            <CardTitle>Detalhes do Evento</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <dl className="space-y-4">
-              { (
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground">Número de Pessoas</dt>
-                  <dd className="mt-1">{event.quantidadePessoas}</dd>
-                </div>
-              )}
-            </dl>
-          </CardContent>
-        </Card>
+                  <CardHeader className="bg-muted/50 pb-4">
+                    <CardTitle>Detalhes do Evento</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <dl className="space-y-4">
+                      <div>
+                        <dt className="text-sm font-medium text-muted-foreground">Data do Evento</dt>
+                        <dd className="mt-1">{format(new Date(event.data), "PPP", { locale: ptBR })}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-muted-foreground">Número de Pessoas</dt>
+                        <dd className="mt-1">{event.data}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-sm font-medium text-muted-foreground">Valor Total</dt>
+                        <dd className="mt-1 text-xl font-semibold">
+                          {new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL"
+                          }).format((event?.valor ?? 0) * (event?.qtdPessoas ?? 0))}
+                        </dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
       </div>
 
       {/* Seção de Cardápios com Abas */}

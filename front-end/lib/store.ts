@@ -66,6 +66,7 @@ export interface Event {
   qtdPessoas?: number;
   funcionarios?: Person[];
   cardapios?: Menu[];
+  valor?: number; // Optional field for event value
 }
 
 interface Balance {
@@ -168,6 +169,7 @@ function fromEventDto(dto: eventoService.EventoShowDto): Event {
       email: dto.cliente.email,
     },
     qtdPessoas: dto.qtdPessoas,
+    valor: dto.valor,
     // Add other properties as needed
   };
 }

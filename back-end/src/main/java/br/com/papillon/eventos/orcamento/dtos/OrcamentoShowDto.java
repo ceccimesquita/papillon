@@ -19,7 +19,7 @@ public record OrcamentoShowDto(
         BigDecimal valorTotal,
         long dataGeracao,
         long dataLimite,
-        String status,
+        String   status,
         List<Funcionario> funcionarios,
         List<Cardapio> cardapios
 ) {
