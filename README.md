@@ -24,9 +24,12 @@ A documentação completa do projeto está disponível em:
 - Lombok  
 
 ### Front-End
-
+ - TypeScript
+ - React
  - Next.js
-
+ - Zustand (state management)
+ - Jest (test runner)
+ - shadcn/ui (component library)
 
 ## Estrutura do Back-End
 
