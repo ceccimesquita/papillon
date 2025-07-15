@@ -7,7 +7,7 @@ export interface EventoCreateDto {
   orcamentoId?: number;
   descricao?: string;
   local?: string;
-  // Add other properties as needed
+  // Add other properties as needed 
 }
 
 export interface EventoShowDto {
@@ -28,6 +28,7 @@ export interface EventoShowDto {
   local?: string;
   createdAt: string;
   updatedAt?: string;
+  qtdPessoas?: number;
 }
 
 export async function createEvento(eventoDto: EventoCreateDto): Promise<EventoShowDto> {

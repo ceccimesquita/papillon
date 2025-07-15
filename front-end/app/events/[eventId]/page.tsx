@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, PlusCircle, Settings, CreditCard, Users, Utensils, RefreshCw, BarChart } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { TransactionList } from "@/components/transaction-list"
+import { InsumoList } from "@/components/transaction-list"
 import { useEventStore } from "@/lib/store"
 import { useState, useEffect, useMemo } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -336,12 +336,6 @@ export default function EventPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="transactions">Transações</TabsTrigger>
-            <TabsTrigger value="sources">Métodos de Pagamento</TabsTrigger>
-            <TabsTrigger value="charts">Gráficos</TabsTrigger>
-            <TabsTrigger value="summary" className="flex items-center gap-1">
-              <BarChart className="h-4 w-4" />
-              <span>Resumo Financeiro</span>
-            </TabsTrigger>
           </TabsList>
 
           <Dialog open={transactionOpen} onOpenChange={setTransactionOpen}>
@@ -377,12 +371,12 @@ export default function EventPage() {
               <CardDescription>Visualize todas as transações realizadas.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
-              <TransactionList eventId={eventId} key={`transaction-list-${refreshKey}`} />
+              <InsumoList eventId={eventId} key={`transaction-list-${refreshKey}`} />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="sources" className="mt-0">
+        {/* <TabsContent value="sources" className="mt-0">
           <Card className="overflow-hidden">
             <CardHeader className="bg-muted/50 pb-4">
               <CardTitle>Métodos de Pagamento</CardTitle>
@@ -420,7 +414,7 @@ export default function EventPage() {
 
         <TabsContent value="summary" className="mt-0">
           <EventSummary eventId={eventId} key={`event-summary-${refreshKey}`} />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   )

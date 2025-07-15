@@ -1,50 +1,37 @@
 "use client"
 
 import { useEventStore } from "@/lib/store"
-import { format } from "date-fns"
 import { ArrowDownCircle, ArrowUpCircle, Filter } from "lucide-react"
 import { useState } from "react"
 import { Button } from "./ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
 
-interface TransactionListProps {
+interface InsumoListProps {
   eventId: string
 }
 
-type SortField = "date" | "amount" | "description"
+type SortField = "nome" | "valor"
 type SortOrder = "asc" | "desc"
 
-export function TransactionList({ eventId }: TransactionListProps) {
+export function InsumoList({ eventId }: InsumoListProps) {
   const { getEvent } = useEventStore()
   const event = getEvent(eventId)
-  const [sortField, setSortField] = useState<SortField>("date")
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc")
-  const [filter, setFilter] = useState<"all" | "budget" | "expense">("all")
+  const [sortField, setSortField] = useState<SortField>("nome")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
 
   if (!event) return null
 
-  let transactions = [...event.transactions]
-
-  // Apply type filter
-  if (filter === "budget") {
-    transactions = transactions.filter((t) => t.type === "budget")
-  } else if (filter === "expense") {
-    transactions = transactions.filter((t) => t.type === "expense")
-  }
+  let insumos = [...event.transactions]
 
   // Apply sorting
-  transactions.sort((a, b) => {
-    if (sortField === "date") {
+  insumos.sort((a, b) => {
+    if (sortField === "nome") {
       return sortOrder === "asc"
-        ? new Date(a.date).getTime() - new Date(b.date).getTime()
-        : new Date(b.date).getTime() - new Date(a.date).getTime()
-    } else if (sortField === "amount") {
-      return sortOrder === "asc" ? a.amount - b.amount : b.amount - a.amount
+        ? a.nome.localeCompare(b.nome)
+        : b.nome.localeCompare(a.nome)
     } else {
-      return sortOrder === "asc"
-        ? a.description.localeCompare(b.description)
-        : b.description.localeCompare(a.description)
+      return sortOrder === "asc" ? a.valor - b.valor : b.valor - a.valor
     }
   })
 
@@ -53,14 +40,14 @@ export function TransactionList({ eventId }: TransactionListProps) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc")
     } else {
       setSortField(field)
-      setSortOrder("desc")
+      setSortOrder("asc")
     }
   }
 
-  if (transactions.length === 0) {
+  if (insumos.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className="text-muted-foreground">Nenhuma transação encontrada.</p>
+        <p className="text-muted-foreground">Nenhum insumo encontrado.</p>
       </div>
     )
   }
@@ -70,16 +57,9 @@ export function TransactionList({ eventId }: TransactionListProps) {
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center">
           <Filter className="h-4 w-4 mr-2" />
-          <Select value={filter} onValueChange={(value: any) => setFilter(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrar por tipo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as transações</SelectItem>
-              <SelectItem value="budget">Apenas orçamento</SelectItem>
-              <SelectItem value="expense">Apenas despesas</SelectItem>
-            </SelectContent>
-          </Select>
+          <span className="text-sm text-muted-foreground">
+            {insumos.length} insumo{insumos.length !== 1 ? 's' : ''} cadastrado{insumos.length !== 1 ? 's' : ''}
+          </span>
         </div>
       </div>
 
@@ -87,52 +67,27 @@ export function TransactionList({ eventId }: TransactionListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">
-                <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("date")}>
-                  Data
-                  {sortField === "date" && <span className="ml-1">{sortOrder === "asc" ? "↑" : "↓"}</span>}
-                </Button>
-              </TableHead>
               <TableHead>
-                <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("description")}>
-                  Descrição
-                  {sortField === "description" && <span className="ml-1">{sortOrder === "asc" ? "↑" : "↓"}</span>}
+                <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("nome")}>
+                  Nome
+                  {sortField === "nome" && <span className="ml-1">{sortOrder === "asc" ? "↑" : "↓"}</span>}
                 </Button>
               </TableHead>
-              <TableHead className="hidden md:table-cell">Fonte</TableHead>
-              <TableHead className="hidden md:table-cell">Destino</TableHead>
               <TableHead className="text-right">
-                <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("amount")}>
+                <Button variant="ghost" className="p-0 font-medium" onClick={() => handleSort("valor")}>
                   Valor
-                  {sortField === "amount" && <span className="ml-1">{sortOrder === "asc" ? "↑" : "↓"}</span>}
+                  {sortField === "valor" && <span className="ml-1">{sortOrder === "asc" ? "↑" : "↓"}</span>}
                 </Button>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction) => {
+            {insumos.map((insumo) => {
               return (
-                <TableRow key={transaction.id}>
-                  <TableCell className="font-medium">{format(new Date(transaction.date), "dd/MM/yyyy")}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      {transaction.type === "budget" ? (
-                        <ArrowUpCircle className="h-4 w-4 text-blue-500 mr-2" />
-                      ) : (
-                        <ArrowDownCircle className="h-4 w-4 text-red-500 mr-2" />
-                      )}
-                      {transaction.description}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">{transaction.source || "—"}</TableCell>
-                  <TableCell className="hidden md:table-cell">{transaction.destination || "—"}</TableCell>
-                  <TableCell
-                    className={`text-right font-medium ${
-                      transaction.type === "budget" ? "text-blue-600" : "text-red-600"
-                    }`}
-                  >
-                    {transaction.type === "budget" ? "+" : "-"}
-                    R$ {transaction.amount.toFixed(2)}
+                <TableRow key={insumo.id}>
+                  <TableCell className="font-medium">{insumo.nome}</TableCell>
+                  <TableCell className="text-right font-medium">
+                    R$ {insumo.valor.toFixed(2)}
                   </TableCell>
                 </TableRow>
               )

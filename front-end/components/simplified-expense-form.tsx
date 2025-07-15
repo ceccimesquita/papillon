@@ -1,14 +1,12 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useEventStore } from "@/lib/store"
 import { useToast } from "@/components/ui/use-toast"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 
@@ -19,20 +17,18 @@ interface SimplifiedExpenseFormProps {
 
 export function SimplifiedExpenseForm({ eventId, onSuccess }: SimplifiedExpenseFormProps) {
   const { toast } = useToast()
-  const { addTransaction, getEventSources, getSourceBalance } = useEventStore()
+  const { addTransaction, getEventBalance } = useEventStore()
+  const [insumos, setInsumos] = useState<{id: string, nome: string}[]>([])
 
   // Estados do formulário
   const [description, setDescription] = useState("")
   const [amount, setAmount] = useState("")
-  const [source, setSource] = useState("")
-  const [destination, setDestination] = useState("")
+  const [pagamento, setPagamento] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Obter fontes disponíveis
-  const availableSources = getEventSources(eventId)
-
-  // Verificar saldo disponível na fonte selecionada
-  const selectedSourceBalance = source ? getSourceBalance(eventId, source).available : null
+  // Obter saldo total do evento
+  const eventBalance = getEventBalance(eventId)
 
   // Validar formulário
   const validateForm = () => {
@@ -47,46 +43,29 @@ export function SimplifiedExpenseForm({ eventId, onSuccess }: SimplifiedExpenseF
       return false
     }
 
-    if (!source) {
-      setError("Selecione uma fonte de orçamento")
-      return false
-    }
-
-    if (!destination.trim()) {
-      setError("O destinatário é obrigatório")
-      return false
-    }
-
-    // Verificar se há saldo suficiente
-    if (selectedSourceBalance !== null && amountValue > selectedSourceBalance) {
-      setError(`Saldo insuficiente na fonte "${source}". Disponível: R$ ${selectedSourceBalance.toFixed(2)}`)
-      return false
-    }
-
     setError(null)
     return true
   }
 
   // Enviar formulário
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsLoading(true)
 
     if (!validateForm()) {
+      setIsLoading(false)
       return
     }
 
     try {
       const newTransaction = {
-        id: Date.now().toString(),
-        description,
-        amount: Number.parseFloat(amount),
-        type: "expense" as const,
-        source,
-        destination,
-        date: new Date(),
+        nome: description,
+        valor: Number.parseFloat(amount),
+        eventoId: eventId,
+        metodoPagamento: pagamento,
       }
 
-      addTransaction(eventId, newTransaction)
+      await addTransaction(eventId, newTransaction)
 
       toast({
         title: "Despesa adicionada",
@@ -96,8 +75,6 @@ export function SimplifiedExpenseForm({ eventId, onSuccess }: SimplifiedExpenseF
       // Limpar formulário
       setDescription("")
       setAmount("")
-      setSource("")
-      setDestination("")
       setError(null)
 
       if (onSuccess) {
@@ -106,13 +83,15 @@ export function SimplifiedExpenseForm({ eventId, onSuccess }: SimplifiedExpenseF
     } catch (err) {
       console.error("Erro ao adicionar despesa:", err)
       setError("Ocorreu um erro ao adicionar a despesa. Tente novamente.")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="description">Descrição *</Label>
+        <Label htmlFor="description">Nome *</Label>
         <Input
           id="description"
           placeholder="Compra de materiais"
@@ -135,51 +114,15 @@ export function SimplifiedExpenseForm({ eventId, onSuccess }: SimplifiedExpenseF
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="source">Fonte do Orçamento *</Label>
-        {availableSources.length > 0 ? (
-          <Select value={source} onValueChange={setSource}>
-            <SelectTrigger id="source">
-              <SelectValue placeholder="Selecione a fonte do orçamento" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableSources.map((sourceOption) => {
-                const balance = getSourceBalance(eventId, sourceOption)
-                return (
-                  <SelectItem key={sourceOption} value={sourceOption}>
-                    {sourceOption} (Disponível: R$ {balance.available.toFixed(2)})
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="text-sm text-muted-foreground p-2 border rounded-md">
-            Não há fontes de orçamento disponíveis. Adicione orçamento ao evento primeiro.
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Selecione de qual fonte de orçamento está saindo o dinheiro para este gasto
-        </p>
-      </div>
-
-      {selectedSourceBalance !== null && (
-        <div className="text-sm">
-          <span className="font-medium">Saldo disponível na fonte:</span> R$ {selectedSourceBalance.toFixed(2)}
-        </div>
-      )}
-
-      <div className="space-y-2">
-        <Label htmlFor="destination">Destinatário *</Label>
+        <Label htmlFor="description">Método de pagamento *</Label>
         <Input
-          id="destination"
-          placeholder="Digite o destinatário"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
+          id="pagamento"
+          placeholder="Método de pagamento"
+          value={pagamento}
+          onChange={(e) => setPagamento(e.target.value)}
         />
-        <p className="text-xs text-muted-foreground">
-          Informe para onde está indo o dinheiro (ex: Fornecedor, Loja, etc.)
-        </p>
       </div>
+
 
       {error && (
         <Alert variant="destructive">
@@ -189,8 +132,12 @@ export function SimplifiedExpenseForm({ eventId, onSuccess }: SimplifiedExpenseF
         </Alert>
       )}
 
-      <Button type="submit" className="w-full" disabled={availableSources.length === 0}>
-        Adicionar Despesa
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={isLoading || Number(eventBalance) <= 0}
+      >
+        {isLoading ? "Processando..." : "Adicionar Despesa"}
       </Button>
     </form>
   )
