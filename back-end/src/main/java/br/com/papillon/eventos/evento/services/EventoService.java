@@ -46,7 +46,7 @@ public class EventoService {
     }
 
     public List<EventoShowDto> listAllEventos() {
-        return eventoRepository.findAll()
+        return eventoRepository.findAllByOrderByDataDesc()
                 .stream()
                 .peek(this::recalcularGastosELucro)   // recalcula antes de mapear
                 .map(EventoShowDto::new)

@@ -28,7 +28,6 @@ export interface EventoShowDto {
   local?: string;
   createdAt: string;
   updatedAt?: string;
-  // Add other properties as needed
 }
 
 export async function createEvento(eventoDto: EventoCreateDto): Promise<EventoShowDto> {
@@ -36,6 +35,7 @@ export async function createEvento(eventoDto: EventoCreateDto): Promise<EventoSh
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
     body: JSON.stringify(eventoDto),
   });
@@ -51,6 +51,10 @@ export async function createEvento(eventoDto: EventoCreateDto): Promise<EventoSh
 export async function listAllEventos(): Promise<EventoShowDto[]> {
   const response = await fetch("http://localhost:8080/api/evento", {
     method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
   });
 
   if (!response.ok) {
@@ -64,6 +68,10 @@ export async function listAllEventos(): Promise<EventoShowDto[]> {
 export async function getEventoById(id: number): Promise<EventoShowDto> {
   const response = await fetch(`http://localhost:8080/api/evento/${id}`, {
     method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
   });
 
   if (!response.ok) {
@@ -79,6 +87,7 @@ export async function updateEvento(id: number, eventoDto: EventoCreateDto): Prom
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
     body: JSON.stringify(eventoDto),
   });
@@ -94,6 +103,10 @@ export async function updateEvento(id: number, eventoDto: EventoCreateDto): Prom
 export async function deleteEvento(id: number): Promise<void> {
   const response = await fetch(`http://localhost:8080/api/evento/${id}`, {
     method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
   });
 
   if (!response.ok) {

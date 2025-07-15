@@ -33,7 +33,7 @@ export default function Home() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="lg:col-span-2">
           <Card className="overflow-hidden h-full">
             <CardHeader className="flex flex-row items-center justify-between bg-muted/50 pb-4">
@@ -58,7 +58,7 @@ export default function Home() {
           </Card>
         </div>
 
-        <div className="lg:col-span-1">
+        {/* <div className="lg:col-span-1">
           <Card className="overflow-hidden h-full">
             <CardHeader className="bg-muted/50 pb-4">
               <CardTitle>Calendário de Eventos</CardTitle>
@@ -70,7 +70,7 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </div> */}
       </div>
     </div>
   )

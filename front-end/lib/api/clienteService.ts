@@ -6,16 +6,17 @@ export interface ClienteDto {
 }
 
 export interface ClienteDetailsDto extends ClienteDto {
-  // You can add additional details fields here if needed
-  // For example:
-  // totalOrcamentos?: number;
-  // eventosRealizados?: number;
+  nome: string;
+  email?: string;
+  cpfCnpj?: string;
+  telefone?: string;
+  eventos: Event[]; 
 }
 
 export interface ApiResponse<T> {
   message?: string;
   error?: string;
-  cliente?: T;
+  cliente?: T;  
   clientes?: T[];
 }
 
@@ -32,8 +33,10 @@ export async function registerCliente(dto: ClienteDto): Promise<ApiResponse<Clie
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify(dto),
+      
     });
 
     if (!response.ok) {
@@ -111,6 +114,7 @@ export async function updateClienteById(id: number, dto: ClienteDto): Promise<Ap
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify(dto),
     });
@@ -140,5 +144,21 @@ export async function deleteClienteById(id: number): Promise<ApiResponse<void>> 
     return await response.json();
   } catch (error) {
     throw error;
+  }
+}
+
+
+export async function fetchClienteDetails(id: number): Promise<ClienteDetailsDto | null> {
+  try {
+    const response = await fetch(`http://localhost:8080/api/cliente/${id}/details`)
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Erro ${response.status}: ${errorText}`)
+    }
+    const data: ApiResponse<ClienteDetailsDto> = await response.json()
+    return data.cliente ?? null
+  } catch (error) {
+    console.error("Erro ao buscar detalhes do cliente:", error)
+    return null
   }
 }
