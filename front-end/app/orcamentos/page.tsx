@@ -54,7 +54,7 @@ export default function BudgetsPage() {
         </Link>
       </div>
 
-      <Tabs defaultValue="pending" className="space-y-6">
+      <Tabs defaultValue="PENDENTE" className="space-y-6">
         <TabsList>
           <TabsTrigger value="PENDENTE">Pendentes ({pendingBudgets.length})</TabsTrigger>
           <TabsTrigger value="ACEITO">Aceitos ({acceptedBudgets.length})</TabsTrigger>

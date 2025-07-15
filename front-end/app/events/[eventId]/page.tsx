@@ -115,51 +115,6 @@ export default function EventPage() {
             </div>
           </div>
         </div>
-
-        <div className="flex gap-2">
-
-          <Dialog open={paymentMethodsOpen} onOpenChange={setPaymentMethodsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
-                <CreditCard className="mr-2 h-4 w-4" />
-                Métodos de Pagamento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Adicionar Métodos de Pagamento</DialogTitle>
-              </DialogHeader>
-              <PaymentMethodsForm
-                eventId={eventId}
-                onSuccess={() => {
-                  setPaymentMethodsOpen(false)
-                  setRefreshKey((prev) => prev + 1)
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="h-9">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Adicionar Pagamento
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Adicionar Pagamento</DialogTitle>
-              </DialogHeader>
-              <AddBudgetForm
-                eventId={eventId}
-                onSuccess={() => {
-                  setBudgetOpen(false)
-                  setRefreshKey((prev) => prev + 1)
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3 mb-8">

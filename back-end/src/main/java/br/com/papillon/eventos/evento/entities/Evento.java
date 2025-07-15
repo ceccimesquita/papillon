@@ -45,13 +45,14 @@ public class Evento {
 
     private String status;
 
+    private int qtdPessoas;
+
     @OneToMany(mappedBy = "evento",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
             fetch = FetchType.EAGER)
     @JsonIgnoreProperties("evento")
     private List<Insumo> insumos = new ArrayList<>();
-
 
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "evento_id", nullable = true) 
@@ -91,7 +92,7 @@ public class Evento {
 //        this.lucro  = this.valor.subtract(this.gastos);
 //    }
 
-    private void recalcularGastosELucro(Evento evento) {
+    public void recalcularGastosELucro(Evento evento) {
         BigDecimal somaInsumos = evento.getInsumos().stream()
                 .map(i -> i.getValor())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

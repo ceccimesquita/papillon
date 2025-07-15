@@ -56,4 +56,15 @@ public class EventoController {
         eventoService.deleteEvento(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status/{novoStatus}")
+    public ResponseEntity<Void> atualizarStatusEventoViaPath(
+            @PathVariable Long id,
+            @PathVariable String novoStatus) {
+
+        eventoService.atualizarStatus(id, novoStatus);
+        return ResponseEntity.noContent().build();
+    }
+
+
 }

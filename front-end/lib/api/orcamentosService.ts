@@ -27,7 +27,7 @@ export interface OrcamentoPayload {
   dataDoEvento: string;
   quantidadePessoas: number;
   valorPorPessoa: number;
-  dataLimite?: string;
+  dataLimite?: Date;
   cardapios: Menu[];
   funcionarios: Funcionario[];
 }

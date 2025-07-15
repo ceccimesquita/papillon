@@ -2,7 +2,7 @@ export interface EventoCreateDto {
   // Define properties based on your EventoCreateDto Java class
   // Example:
   nome: string;
-  dataEvento: string;
+  dataEvento: any;
   clienteId: number;
   orcamentoId?: number;
   descricao?: string;
@@ -12,8 +12,8 @@ export interface EventoCreateDto {
 
 export interface EventoShowDto {
   id: number;
-  nome: string;
-  dataEvento: string;
+  nome: any;
+  data: number;
   cliente: {
     id: number;
     nome: string;

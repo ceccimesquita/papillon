@@ -61,7 +61,7 @@ export interface Budget {
 export interface Event {
   id: string;
   nome: string;
-  data: Date;
+  data: any;
   initialValue: number;
   transactions: Transaction[];
   status: EventStatus;
@@ -140,7 +140,7 @@ function toOrcamentoPayload(budget: Partial<Budget>): orcamentosService.Orcament
     dataDoEvento: budget.dataDoEvento!.toISOString(),
     quantidadePessoas: budget.quantidadePessoas!,
     valorPorPessoa: budget.valorPorPessoa!,
-    dataLimite: budget.dataLimite?.toISOString(),
+    dataLimite: budget.dataLimite,
     cardapios: budget.cardapios || [],
     funcionarios: budget.funcionarios || [],
   };
@@ -149,7 +149,7 @@ function toOrcamentoPayload(budget: Partial<Budget>): orcamentosService.Orcament
 function toEventDto(event: Partial<Event>): eventoService.EventoCreateDto {
   return {
     nome: event.nome!,
-    dataEvento: event.data!.toISOString(),
+    dataEvento: event.data!,
     clienteId: parseInt(event.cliente?.id || '0'),
     orcamentoId: event.id ? parseInt(event.id) : undefined,
     // Add other properties as needed
@@ -157,16 +157,17 @@ function toEventDto(event: Partial<Event>): eventoService.EventoCreateDto {
 }
 
 function fromEventDto(dto: eventoService.EventoShowDto): Event {
+  console.log("DTO recebido:", dto)
   return {
     id: dto.id.toString(),
     nome: dto.nome,
-    data: new Date(dto.dataEvento),
+    data: dto.data,
     initialValue: dto.orcamento?.valorTotal || 0,
     transactions: [],
     status: 'confirmed', // Default status
     cliente: {
       id: dto.cliente.id.toString(),
-      nome: dto.cliente.nome,
+      nome: dto.cliente.nome, 
       email: dto.cliente.email,
     },
     quantidadePessoas: (dto.orcamento && 'quantidadePessoas' in dto.orcamento) ? (dto.orcamento as any).quantidadePessoas : undefined

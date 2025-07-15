@@ -81,7 +81,7 @@ public class AuthController {
                     .setSubject(user.getUsername())
                     .claim("role", user.getAuthorities().iterator().next().getAuthority())
                     .setIssuedAt(new Date())
-                    .setExpiration(new Date(System.currentTimeMillis() + 3600000)) // 1h
+                    .setExpiration(new Date(System.currentTimeMillis() + 28800000)) // 1h
                     .signWith(key, SignatureAlgorithm.HS256)
                     .compact();
 
@@ -92,5 +92,10 @@ public class AuthController {
             System.out.println("[AUTH] Falha na autenticação: " + e.getMessage());
             throw e;
         }
+    }
+
+    @GetMapping("/validate")
+    public boolean validateToken(Authentication authentication) {
+        return authentication != null && authentication.isAuthenticated();
     }
 }

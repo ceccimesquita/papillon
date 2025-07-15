@@ -28,9 +28,7 @@ export default function HistoricoPage() {
           <CardDescription>Histórico de eventos já realizados.</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          {(
-            <EventList showPastEvents={true} />
-          )}
+          <EventList />
         </CardContent>
       </Card>
     </div>

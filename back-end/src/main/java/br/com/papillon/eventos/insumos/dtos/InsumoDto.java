@@ -1,4 +1,4 @@
-package br.com.papillon.eventos.insumos.dtos;
+    package br.com.papillon.eventos.insumos.dtos;
 
 import java.math.BigDecimal;
 
@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import br.com.papillon.eventos.insumos.entities.Insumo;
-import br.com.papillon.eventos.metodoDePagamento.dtos.MetodoPagamentoDto;
 
 public record InsumoDto(
         Long id,
@@ -19,8 +18,7 @@ public record InsumoDto(
         @NotNull
         BigDecimal valor,
         
-        @NotNull
-        MetodoPagamentoDto metodoPagamento,
+        String metodoPagamento,
 
         @NotNull
         Long eventoId
@@ -30,7 +28,7 @@ public record InsumoDto(
                 insumo.getId(),
                 insumo.getNome(),
                 insumo.getValor(),
-                new MetodoPagamentoDto(insumo.getMetodoPagamento()),
+                insumo.getMetodoPagamento(),
                 insumo.getEvento().getId()
         );
     }

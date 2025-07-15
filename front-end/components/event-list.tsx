@@ -67,7 +67,9 @@ export function EventList({ eventsToShow, showPastEvents = false }: EventListPro
               <h3 className="font-medium">{event.nome}</h3>
               <div className="flex items-center text-sm text-muted-foreground mt-1">
                 <CalendarIcon className="mr-1 h-3 w-3" />
-                
+                {
+                  format(new Date(event.data), "dd/MM/yyyy", { locale: ptBR })
+                }   
               </div>
               {event.cliente && (
                 <div className="text-xs text-muted-foreground mt-1">
@@ -77,6 +79,7 @@ export function EventList({ eventsToShow, showPastEvents = false }: EventListPro
             </div>
             <Button variant="ghost" size="icon">
               <ChevronRight className="h-4 w-4" />
+                
             </Button>
           </div>
         </Link>

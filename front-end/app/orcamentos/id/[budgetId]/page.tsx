@@ -100,7 +100,7 @@ export default function BudgetDetailPage() {
       })
       
       if (budget.eventId) {
-        router.push(`/events/${budget.eventId}`)
+        router.push(`/`)
       }
     } catch (error) {
       toast({
@@ -120,6 +120,8 @@ export default function BudgetDetailPage() {
         title: "Orçamento rejeitado",
         description: "O orçamento foi marcado como rejeitado.",
       })
+
+      router.push(`/`)
     } catch (error) {
       toast({
         title: "Erro",

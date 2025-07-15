@@ -20,6 +20,7 @@ export async function login(login: LoginDto){
 
         const data = await response.json();
         localStorage.setItem("token", data.token);
+        console.log(data.token)
         return data;
     } catch (error) {
         console.error("Login failed:", error);
