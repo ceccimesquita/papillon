@@ -146,7 +146,7 @@ export default function BudgetDetailPage() {
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="h-9" onClick={handleEditBudget}>
               <Edit className="mr-2 h-4 w-4" />
-              Editar
+              Baixar PDF
             </Button>
 
             <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
@@ -175,12 +175,12 @@ export default function BudgetDetailPage() {
             </Dialog>
 
             <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="h-9">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Aceitar
-                </Button>
-              </DialogTrigger>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="h-9">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Aceitar
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Aceitar Orçamento</DialogTitle>

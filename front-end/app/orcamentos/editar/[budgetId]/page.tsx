@@ -48,7 +48,7 @@ export default function EditBudgetPage() {
         </CardHeader>
         <CardContent className="pt-6">
           <BudgetForm budgetId={budgetId} onError={handleError} />
-        </CardContent>
+        </CardContent>  
       </Card>
     </div>
   )
