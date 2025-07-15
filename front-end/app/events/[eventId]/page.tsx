@@ -48,10 +48,12 @@ export default function EventPage() {
   const event = useMemo(() => getEvent(eventId), [eventId, getEvent, refreshKey])
   const balance = useMemo(() => getEventBalance(eventId), [eventId, getEventBalance, refreshKey])
 
+  console.log(event)
+
   // Obter cliente associado ao evento
   const clientDetails = useMemo(() => {
-    if (event?.client?.id) {
-      return getClient(event.client.id)
+    if (event?.cliente?.id) {
+      return getClient(event.cliente.id)
     }
     return null
   }, [event, getClient, refreshKey])
@@ -87,7 +89,7 @@ export default function EventPage() {
   }
 
   // Calcular o total de salários
-  const totalSalaries = event.people ? event.people.reduce((sum, person) => sum + person.salary, 0) : 0
+  const totalSalaries = event.funcionarios ? event.funcionarios.reduce((sum, person) => sum + person.valor, 0) : 0
 
   return (
     <div className="container max-w-screen-2xl mx-auto px-4 py-6 md:px-6 md:py-8">
@@ -101,86 +103,17 @@ export default function EventPage() {
           </Link>
           <div className="ml-4">
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">{event.name}</h1>
+              <h1 className="text-3xl font-bold tracking-tight">{event.nome}</h1>
               <EventStatusBadge status={event.status} />
               <Button variant="ghost" size="sm" onClick={handleRefresh} title="Atualizar dados">
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex items-center gap-3 mt-2">
-              <DaysRemaining eventDate={event.date} />
+              <DaysRemaining eventDate={event.data} />
               <EventStatusSelector eventId={eventId} currentStatus={event.status} />
             </div>
           </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
-                <Settings className="mr-2 h-4 w-4" />
-                Editar Evento
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Editar Evento</DialogTitle>
-              </DialogHeader>
-              <EditEventForm
-                eventId={eventId}
-                onSuccess={() => {
-                  setEditOpen(false)
-                  setRefreshKey((prev) => prev + 1)
-                  toast({
-                    title: "Evento atualizado",
-                    description: "As informações do evento foram atualizadas com sucesso.",
-                  })
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={paymentMethodsOpen} onOpenChange={setPaymentMethodsOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
-                <CreditCard className="mr-2 h-4 w-4" />
-                Métodos de Pagamento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Adicionar Métodos de Pagamento</DialogTitle>
-              </DialogHeader>
-              <PaymentMethodsForm
-                eventId={eventId}
-                onSuccess={() => {
-                  setPaymentMethodsOpen(false)
-                  setRefreshKey((prev) => prev + 1)
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={budgetOpen} onOpenChange={setBudgetOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="h-9">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Adicionar Pagamento
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Adicionar Pagamento</DialogTitle>
-              </DialogHeader>
-              <AddBudgetForm
-                eventId={eventId}
-                onSuccess={() => {
-                  setBudgetOpen(false)
-                  setRefreshKey((prev) => prev + 1)
-                }}
-              />
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
@@ -224,24 +157,24 @@ export default function EventPage() {
             <dl className="space-y-4">
               <div>
                 <dt className="text-sm font-medium text-muted-foreground">Nome</dt>
-                <dd className="mt-1">{event.client.name}</dd>
+                <dd className="mt-1">{event.cliente.nome}</dd>
               </div>
-              {(event.client.document || (clientDetails && clientDetails.document)) && (
+              {(event.cliente.cpfCnpj || (clientDetails && clientDetails.document)) && (
                 <div>
                   <dt className="text-sm font-medium text-muted-foreground">CPF/CNPJ</dt>
-                  <dd className="mt-1">{event.client.document || (clientDetails && clientDetails.document)}</dd>
+                  <dd className="mt-1">{event.cliente.cpfCnpj || (clientDetails && clientDetails.document)}</dd>
                 </div>
               )}
-              {(event.client.email || (clientDetails && clientDetails.email)) && (
+              {(event.cliente.email || (clientDetails && clientDetails.email)) && (
                 <div>
                   <dt className="text-sm font-medium text-muted-foreground">Email</dt>
-                  <dd className="mt-1">{event.client.email || (clientDetails && clientDetails.email)}</dd>
+                  <dd className="mt-1">{event.cliente.email || (clientDetails && clientDetails.email)}</dd>
                 </div>
               )}
-              {(event.client.phone || (clientDetails && clientDetails.phone)) && (
+              {(event.cliente.telefone || (clientDetails && clientDetails.phone)) && (
                 <div>
                   <dt className="text-sm font-medium text-muted-foreground">Telefone</dt>
-                  <dd className="mt-1">{event.client.phone || (clientDetails && clientDetails.phone)}</dd>
+                  <dd className="mt-1">{event.cliente.telefone || (clientDetails && clientDetails.phone)}</dd>
                 </div>
               )}
             </dl>
@@ -254,16 +187,10 @@ export default function EventPage() {
           </CardHeader>
           <CardContent className="pt-6">
             <dl className="space-y-4">
-              {event.peopleCount && (
+              { (
                 <div>
                   <dt className="text-sm font-medium text-muted-foreground">Número de Pessoas</dt>
-                  <dd className="mt-1">{event.peopleCount}</dd>
-                </div>
-              )}
-              {event.notes && (
-                <div>
-                  <dt className="text-sm font-medium text-muted-foreground">Observações</dt>
-                  <dd className="mt-1 whitespace-pre-line">{event.notes}</dd>
+                  <dd className="mt-1">{event.quantidadePessoas}</dd>
                 </div>
               )}
             </dl>
@@ -271,91 +198,102 @@ export default function EventPage() {
         </Card>
       </div>
 
-      {/* Cardápios */}
-      {event.menus && event.menus.length > 0 && (
-        <Card className="overflow-hidden mb-8">
-          <CardHeader className="bg-muted/50 pb-4 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center">
-                <Utensils className="mr-2 h-5 w-5" />
-                Cardápios
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <Tabs defaultValue={event.menus[0].id} className="w-full">
-              <TabsList className="w-full flex overflow-x-auto">
-                {event.menus.map((menu) => (
-                  <TabsTrigger key={menu.id} value={menu.id} className="flex-1">
-                    {menu.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+      {/* Seção de Cardápios com Abas */}
+{event.cardapios && (
+  <Card className="overflow-hidden mb-8">
+    <CardHeader className="bg-muted/50 pb-4">
+      <div className="flex items-center">
+        <Utensils className="mr-2 h-5 w-5" />
+        <CardTitle>Cardápios</CardTitle>
+      </div>
+    </CardHeader>
+    <CardContent className="pt-6">
+      <Tabs defaultValue="pratos" className="w-full">
+        <TabsList className="grid grid-cols-2 w-full">
+          <TabsTrigger value="pratos">Pratos</TabsTrigger>
+          <TabsTrigger value="bebidas">Bebidas</TabsTrigger>
+        </TabsList>
 
-              {event.menus.map((menu) => (
-                <TabsContent key={menu.id} value={menu.id} className="mt-4">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">Pratos</h3>
-                      {menu.items.filter((item) => item.type === "food").length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Nome</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {menu.items
-                                .filter((item) => item.type === "food")
-                                .map((item, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell className="font-medium">{item.name}</TableCell>
-                                  </TableRow>
-                                ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">Nenhum prato cadastrado neste cardápio.</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-medium mb-4">Bebidas</h3>
-                      {menu.items.filter((item) => item.type === "drink").length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Nome</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {menu.items
-                                .filter((item) => item.type === "drink")
-                                .map((item, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell className="font-medium">{item.name}</TableCell>
-                                  </TableRow>
-                                ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">Nenhuma bebida cadastrada neste cardápio.</p>
-                      )}
+        <TabsContent value="pratos" className="mt-4">
+          {event.cardapios.some(menu => 
+            menu.itens.some(item => item.tipo === "prato")
+          ) ? (
+            <div className="space-y-6">
+              {event.cardapios.map((cardapio, cardapioIndex) => {
+                const pratos = cardapio.itens.filter(item => item.tipo === "prato");
+                return pratos.length > 0 ? (
+                  <div key={`pratos-${cardapioIndex}`}>
+                    <h3 className="text-lg font-medium mb-2">{cardapio.nome}</h3>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Descrição</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pratos.map((prato, index) => (
+                            <TableRow key={`prato-${cardapioIndex}-${index}`}>
+                              <TableCell className="font-medium">{prato.nome}</TableCell>
+                              <TableCell>{prato.descricao || '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
-                </TabsContent>
-              ))}
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
+                ) : null;
+              })}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Nenhum prato cadastrado nos cardápios.</p>
+          )}
+        </TabsContent>
+
+        <TabsContent value="bebidas" className="mt-4">
+          {event.cardapios.some(menu => 
+            menu.itens.some(item => item.tipo === "bebida")
+          ) ? (
+            <div className="space-y-6">
+              {event.cardapios.map((cardapio, cardapioIndex) => {
+                const bebidas = cardapio.itens.filter(item => item.tipo === "bebida");
+                return bebidas.length > 0 ? (
+                  <div key={`bebidas-${cardapioIndex}`}>
+                    <h3 className="text-lg font-medium mb-2">{cardapio.nome}</h3>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Descrição</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {bebidas.map((bebida, index) => (
+                            <TableRow key={`bebida-${cardapioIndex}-${index}`}>
+                              <TableCell className="font-medium">{bebida.nome}</TableCell>
+                              <TableCell>{bebida.descricao || '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">Nenhuma bebida cadastrada nos cardápios.</p>
+          )}
+        </TabsContent>
+      </Tabs>
+    </CardContent>
+  </Card>
+)}
 
       {/* Seção de Pessoas */}
-      {event.people && event.people.length > 0 && (
+      {event.funcionarios && event.funcionarios.length > 0 && (
         <Card className="overflow-hidden mb-8">
           <CardHeader className="bg-muted/50 pb-4 flex flex-row items-center justify-between">
             <div>
@@ -380,11 +318,11 @@ export default function EventPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {event.people.map((person, index) => (
+                  {event.funcionarios.map((person, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{person.name}</TableCell>
-                      <TableCell>{person.role}</TableCell>
-                      <TableCell className="text-right">R$ {person.salary.toFixed(2)}</TableCell>
+                      <TableCell className="font-medium">{person.nome}</TableCell>
+                      <TableCell>{person.funcao}</TableCell>
+                      <TableCell className="text-right">R$ {person.valor.toFixed(2)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

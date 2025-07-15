@@ -13,8 +13,7 @@ export interface MenuItem {
 
 export interface Menu {
   nome: string;
-  tipo: "prato" | "bebida";
-  descricao?: string;
+  itens: MenuItem[];
 }
 
 export interface Funcionario {
@@ -28,10 +27,9 @@ export interface OrcamentoPayload {
   dataDoEvento: string;
   quantidadePessoas: number;
   valorPorPessoa: number;
-  dataLimite?: string;
+  dataLimite?: Date;
   cardapios: Menu[];
   funcionarios: Funcionario[];
-  notas?: string;
 }
 
 export interface OrcamentoResponse extends OrcamentoPayload {
@@ -47,6 +45,7 @@ export async function enviarOrcamento(payload: OrcamentoPayload): Promise<Orcame
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
     body: JSON.stringify(payload),
   });
@@ -62,6 +61,10 @@ export async function enviarOrcamento(payload: OrcamentoPayload): Promise<Orcame
 export async function pegarOrcamentos(): Promise<OrcamentoResponse[]> {
   const response = await fetch("http://localhost:8080/api/orcamento", {
     method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
   });
 
   if (!response.ok) {
@@ -77,6 +80,7 @@ export async function atualizarOrcamento(id: number, payload: OrcamentoPayload):
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
     body: JSON.stringify(payload),
   });
@@ -92,6 +96,10 @@ export async function atualizarOrcamento(id: number, payload: OrcamentoPayload):
 export async function atualizarStatusOrcamento(id: number, status: "PENDENTE" | "ACEITO" | "RECUSADO"): Promise<OrcamentoResponse> {
   const response = await fetch(`http://localhost:8080/api/orcamento/${id}/status/${status}`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
   });
 
   if (!response.ok) {
@@ -105,10 +113,32 @@ export async function atualizarStatusOrcamento(id: number, status: "PENDENTE" | 
 export async function deletarOrcamento(id: number): Promise<void> {
   const response = await fetch(`http://localhost:8080/api/orcamento/${id}`, {
     method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
   });
 
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Erro ${response.status}: ${errorText}`);
   }
+}     
+
+export function getOrcamentoById(arg0: number) {
+  throw new Error("Function not implemented.");
+}
+
+export async function downloadPdfOrcamento(id: string): Promise<Blob> {
+  const response = await fetch(`http://localhost:8080/api/orcamento/${id}/pdf`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });   
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Erro ${response.status}: ${errorText}`);
+  }
+  return response.blob();
 }

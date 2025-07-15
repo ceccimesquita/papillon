@@ -12,7 +12,6 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import br.com.papillon.eventos.evento.entities.Evento;
-import br.com.papillon.eventos.metodoDePagamento.entities.MetodoPagamento;
 
 @Entity
 @Table(name = "insumos")
@@ -37,15 +36,12 @@ public class Insumo {
     @JsonIgnoreProperties("insumos")
     private Evento evento;
 
-    // 1-1 unidirecional: Insumo conhece seu MétodoPagamento
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "metodo_pagamento_id", nullable = false)
-    private MetodoPagamento metodoPagamento;
+    private String metodoPagamento;
 
     public Insumo(InsumoDto dto, Evento evento) {
         this.nome = dto.nome();
         this.valor = dto.valor();
         this.evento = evento;
-        this.metodoPagamento = new MetodoPagamento(dto.metodoPagamento());
+        this.metodoPagamento = dto.metodoPagamento();
     }
 }

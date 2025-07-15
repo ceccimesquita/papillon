@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, CheckCircle, XCircle, CreditCard, Users, Edit, Utensils } from "lucide-react"
+import { ArrowLeft, CheckCircle, XCircle, CreditCard, Users, Edit, Utensils, Download } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { Budget, useEventStore } from "@/lib/store"
@@ -20,9 +20,8 @@ import {
 } from "@/components/ui/dialog"
 import { useEffect, useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { PaymentMethodsForm } from "@/components/payment-methods-form"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { downloadPdfOrcamento } from "@/lib/api/orcamentosService"
 
 export default function BudgetDetailPage() {
   const params = useParams()
@@ -37,14 +36,42 @@ export default function BudgetDetailPage() {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
 
   useEffect(() => {
-  const fetchBudget = async () => {
-    const data = await getBudget(budgetId)
-    console.log("Fetched budget:", data)
-    setBudget(data)
-  }
+    const fetchBudget = async () => {
+      const data = await getBudget(budgetId)
+      console.log("Fetched budget:", data)
+      setBudget(data)
+    }
 
-  fetchBudget()
-}, [budgetId, getBudget]) 
+    fetchBudget()
+  }, [budgetId, getBudget]) 
+
+  const handleDownloadPdf = async () => {
+    try {
+      if (!budget) return
+      
+      const pdfBlob = await downloadPdfOrcamento(budget.id)
+      const url = window.URL.createObjectURL(pdfBlob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `orcamento_${budget.id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: "Download iniciado",
+        description: "O PDF do orçamento foi baixado com sucesso.",
+      })
+    } catch (error) {
+      console.error("Erro ao baixar PDF:", error)
+      toast({
+        variant: "destructive",
+        title: "Erro ao baixar PDF",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar baixar o PDF.",
+      })
+    }
+  }
 
   if (!budget) {
     return (
@@ -64,7 +91,7 @@ export default function BudgetDetailPage() {
 
   const handleAcceptBudget = async () => {
     try {
-      await updateBudgetStatus(budgetId, 'accepted')
+      await updateBudgetStatus(budgetId, 'ACEITO')
       setConfirmDialogOpen(false)
       
       toast({
@@ -72,9 +99,8 @@ export default function BudgetDetailPage() {
         description: "O orçamento foi marcado como aceito com sucesso.",
       })
       
-      // Se houver eventId, redireciona para a página do evento
       if (budget.eventId) {
-        router.push(`/events/${budget.eventId}`)
+        router.push(`/`)
       }
     } catch (error) {
       toast({
@@ -87,13 +113,15 @@ export default function BudgetDetailPage() {
 
   const handleRejectBudget = async () => {
     try {
-      await updateBudgetStatus(budgetId, 'rejected')
+      await updateBudgetStatus(budgetId, 'RECUSADO')
       setRejectDialogOpen(false)
       
       toast({
         title: "Orçamento rejeitado",
         description: "O orçamento foi marcado como rejeitado.",
       })
+
+      router.push(`/`)
     } catch (error) {
       toast({
         title: "Erro",
@@ -103,25 +131,19 @@ export default function BudgetDetailPage() {
     }
   }
 
-  const handleEditBudget = () => {
-    router.push(`/orcamentos/editar/${budgetId}`)
-  }
-
   const statusColors = {
     PENDENTE: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-100",
     ACEITO: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100",
-    REJEITADO: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100",
+    RECUSADO: "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100",
   }
 
   const statusLabels = {
     PENDENTE: "PENDENTE",
     ACEITO: "ACEITO",
-    REJEITADO: "REJEITADO",
+    RECUSADO: "RECUSADO",
   }
 
-  // Calcular o total de valores dos funcionários
   const totalFuncionarios = budget.funcionarios.reduce((sum, func) => sum + func.valor, 0)
-
   return (
     <div className="container max-w-full mx-auto px-4 py-6 md:px-6 md:py-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -144,10 +166,16 @@ export default function BudgetDetailPage() {
 
         {budget.status === "PENDENTE" && (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-9" onClick={handleEditBudget}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9"
+              onClick={handleDownloadPdf}
+            >
               <Edit className="mr-2 h-4 w-4" />
-              Editar
+              Baixar PDF
             </Button>
+
 
             <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
               <DialogTrigger asChild>
@@ -175,12 +203,12 @@ export default function BudgetDetailPage() {
             </Dialog>
 
             <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="h-9">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Aceitar
-                </Button>
-              </DialogTrigger>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="h-9">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Aceitar
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Aceitar Orçamento</DialogTitle>
@@ -274,69 +302,79 @@ export default function BudgetDetailPage() {
       {budget.cardapios && budget.cardapios.length > 0 && (
   <Card className="overflow-hidden mb-8">
     <CardHeader className="bg-muted/50 pb-4 flex flex-row items-center justify-between">
-      <div>
-        <CardTitle className="flex items-center">
-          <Utensils className="mr-2 h-5 w-5" />
-          Cardápios
-        </CardTitle>
-      </div>
+        <div>
+            <CardTitle className="flex items-center">
+                <Utensils className="mr-2 h-5 w-5" />
+                Cardápios
+            </CardTitle>
+        </div>
     </CardHeader>
     <CardContent className="pt-6 space-y-10">
-      {/* Pratos */}
-      <div>
-        <h3 className="text-lg font-medium mb-4">Pratos</h3>
-        {budget.cardapios.filter(item => item.tipo === "prato").length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {budget.cardapios
-                  .filter(item => item.tipo === "prato")
-                  .map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.nome}</TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <p className="text-muted-foreground">Nenhum prato cadastrado.</p>
-        )}
-      </div>
+        {budget.cardapios.length > 0 ? (
+            budget.cardapios.map((cardapio, cardapioIndex) => (
+                <div key={cardapioIndex}>
+                    <h3 className="text-lg font-medium mb-4">{cardapio.nome}</h3>
+                    
+                    {/* Pratos */}
+                    <div className="mb-6">
+                        <h4 className="text-md font-medium mb-2">Pratos</h4>
+                        {cardapio.itens.filter(item => item.tipo === "prato").length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Nome</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {cardapio.itens
+                                            .filter(item => item.tipo === "prato")
+                                            .map((item, index) => (
+                                                <TableRow key={index}>
+                                                    <TableCell className="font-medium">{item.nome}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        ) : (
+                            <p className="text-muted-foreground">Nenhum prato neste cardápio.</p>
+                        )}
+                    </div>
 
-      {/* Bebidas */}
-      <div>
-        <h3 className="text-lg font-medium mb-4">Bebidas</h3>
-        {budget.cardapios.filter(item => item.tipo === "bebida").length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {budget.cardapios
-                  .filter(item => item.tipo === "bebida")
-                  .map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.nome}</TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </div>
+                    {/* Bebidas */}
+                    <div>
+                        <h4 className="text-md font-medium mb-2">Bebidas</h4>
+                        {cardapio.itens.filter(item => item.tipo === "bebida").length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Nome</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {cardapio.itens
+                                            .filter(item => item.tipo === "bebida")
+                                            .map((item, index) => (
+                                                <TableRow key={index}>
+                                                    <TableCell className="font-medium">{item.nome}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        ) : (
+                            <p className="text-muted-foreground">Nenhuma bebida neste cardápio.</p>
+                        )}
+                    </div>
+                </div>
+            ))
         ) : (
-          <p className="text-muted-foreground">Nenhuma bebida cadastrada.</p>
+            <p className="text-muted-foreground">Nenhum cardápio cadastrado.</p>
         )}
-      </div>
     </CardContent>
-  </Card>
+</Card>
 )}
 
 

@@ -14,7 +14,7 @@ export function EventCalendar() {
   // Função para verificar se um dia tem eventos
   const hasEventOnDay = useCallback(
     (day: Date) => {
-      return events.some((event) => isSameDay(new Date(event.date), day))
+      return events.some((event) => isSameDay(new Date(event.data), day))
     },
     [events],
   )
@@ -22,7 +22,7 @@ export function EventCalendar() {
   // Função para verificar se um dia tem eventos passados
   const hasPastEventOnDay = useCallback(
     (day: Date) => {
-      return events.some((event) => isSameDay(new Date(event.date), day) && isPast(day) && !isToday(day))
+      return events.some((event) => isSameDay(new Date(event.data), day) && isPast(day) && !isToday(day))
     },
     [events],
   )
@@ -30,7 +30,7 @@ export function EventCalendar() {
   // Função para verificar se um dia tem eventos futuros
   const hasFutureEventOnDay = useCallback(
     (day: Date) => {
-      return events.some((event) => isSameDay(new Date(event.date), day) && (isToday(day) || !isPast(day)))
+      return events.some((event) => isSameDay(new Date(event.data), day) && (isToday(day) || !isPast(day)))
     },
     [events],
   )
@@ -38,7 +38,7 @@ export function EventCalendar() {
   // Função para obter todos os eventos de um dia específico
   const getEventsForDay = useCallback(
     (day: Date) => {
-      return events.filter((event) => isSameDay(new Date(event.date), day))
+      return events.filter((event) => isSameDay(new Date(event.data), day))
     },
     [events],
   )

@@ -2,8 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { syncClientWithEvent } from "./client-store";
 import * as orcamentosService from "./api/orcamentosService";
+import * as eventoService from "./api/eventoService"; // Import the evento service
 
-// Interfaces (mantenha as que você já tem, apenas ajustando os nomes)
+// Interfaces
 export interface Transaction {
   id: string;
   description: string;
@@ -30,13 +31,10 @@ export interface MenuItem {
   tipo: "prato" | "bebida";
 }
 
-
 export interface Menu {
   nome: string;
-  tipo: "prato" | "bebida";
-  descricao?: string;
+  itens: MenuItem[];
 }
-
 
 export interface Person {
   nome: string;
@@ -63,13 +61,12 @@ export interface Budget {
 export interface Event {
   id: string;
   nome: string;
-  data: Date;
+  data: any;
   initialValue: number;
   transactions: Transaction[];
   status: EventStatus;
   cliente: Client;
   quantidadePessoas?: number;
-  notas?: string;
   funcionarios?: Person[];
   cardapios?: Menu[];
 }
@@ -94,29 +91,32 @@ interface EventStore {
   loading: boolean;
   error: string | null;
   
-  // Operações de Evento
-  addEvent: (event: Event) => void;
-  updateEvent: (eventId: string, updatedEvent: Event) => void;
-  addTransaction: (eventId: string, transaction: Transaction) => void;
+  // Event operations
+  fetchEvents: () => Promise<void>;
+  addEvent: (event: Omit<Event, 'id'>) => Promise<Event>;
+  updateEvent: (eventId: string, updatedEvent: Partial<Event>) => Promise<void>;
+  deleteEvent: (eventId: string) => Promise<void>;
   getEvent: (eventId: string) => Event | undefined;
+  addTransaction: (eventId: string, transaction: Omit<Transaction, 'id'>) => Promise<void>;
+  
+  // Budget operations
+  fetchBudgets: () => Promise<void>;
+  createBudget: (budget: Omit<Budget, 'id' | 'createdAt' | 'status'>) => Promise<Budget>;
+  getBudget: (id: string) => Promise<Budget | undefined>;
+  updateBudget: (id: string, budget: Partial<Budget>) => Promise<void>;
+  updateBudgetStatus: (id: string, status: "PENDENTE" | "ACEITO" | "RECUSADO") => Promise<void>;
+  deleteBudget: (id: string) => Promise<void>;
+  
+  // Balance operations
   getEventBalance: (eventId: string) => Balance;
   getAllEventsBalance: () => Balance;
   getEventSources: (eventId: string) => string[];
   getSourceBalance: (eventId: string, source: string) => SourceBalance;
   getAllSourcesBalances: (eventId: string) => SourceBalance[];
   canSpendFromSource: (eventId: string, source: string, amount: number) => boolean;
-  
-  // Operações de Budget
-  fetchBudgets: () => Promise<void>;
-  createBudget: (budget: Budget) => Promise<void>;
-  getBudget: (id: string) => Promise<Budget | undefined>;
-  updateBudget: (id: string, budget: Budget) => Promise<void>;
-  updateBudgetStatus: (id: string, status: "pending" | "accepted" | "rejected") => Promise<void>;
-  deleteBudget: (id: string) => Promise<void>;
-  // Removido: convertBudgetToEvent
 }
 
-// Funções de conversão
+// Conversion functions
 function toBudget(orcamento: orcamentosService.OrcamentoResponse): Budget {
   return {
     id: orcamento.id.toString(),
@@ -126,9 +126,7 @@ function toBudget(orcamento: orcamentosService.OrcamentoResponse): Budget {
     quantidadePessoas: orcamento.quantidadePessoas,
     dataDoEvento: new Date(orcamento.dataDoEvento),
     dataLimite: orcamento.dataLimite ? new Date(orcamento.dataLimite) : undefined,
-    notas: orcamento.notas,
-    status: orcamento.status === 'ACEITO' ? 'ACEITO' : 
-           orcamento.status === 'RECUSADO' ? 'RECUSADO' : 'PENDENTE',
+    status: orcamento.status,
     eventId: orcamento.eventId?.toString(),
     funcionarios: orcamento.funcionarios,
     cardapios: orcamento.cardapios,
@@ -136,16 +134,44 @@ function toBudget(orcamento: orcamentosService.OrcamentoResponse): Budget {
   };
 }
 
-function toOrcamentoPayload(budget: Budget): orcamentosService.OrcamentoPayload {
+function toOrcamentoPayload(budget: Partial<Budget>): orcamentosService.OrcamentoPayload {
   return {
-    cliente: budget.cliente,
-    dataDoEvento: budget.dataDoEvento.toISOString(),
-    quantidadePessoas: budget.quantidadePessoas,
-    valorPorPessoa: budget.valorPorPessoa,
-    dataLimite: budget.dataLimite?.toISOString(),
-    cardapios: budget.cardapios,
-    funcionarios: budget.funcionarios,
-    notas: budget.notas,
+    cliente: budget.cliente!,
+    dataDoEvento: budget.dataDoEvento!.toISOString(),
+    quantidadePessoas: budget.quantidadePessoas!,
+    valorPorPessoa: budget.valorPorPessoa!,
+    dataLimite: budget.dataLimite,
+    cardapios: budget.cardapios || [],
+    funcionarios: budget.funcionarios || [],
+  };
+}
+
+function toEventDto(event: Partial<Event>): eventoService.EventoCreateDto {
+  return {
+    nome: event.nome!,
+    dataEvento: event.data!,
+    clienteId: parseInt(event.cliente?.id || '0'),
+    orcamentoId: event.id ? parseInt(event.id) : undefined,
+    // Add other properties as needed
+  };
+}
+
+function fromEventDto(dto: eventoService.EventoShowDto): Event {
+  console.log("DTO recebido:", dto)
+  return {
+    id: dto.id.toString(),
+    nome: dto.nome,
+    data: dto.data,
+    initialValue: dto.orcamento?.valorTotal || 0,
+    transactions: [],
+    status: 'confirmed', // Default status
+    cliente: {
+      id: dto.cliente.id.toString(),
+      nome: dto.cliente.nome, 
+      email: dto.cliente.email,
+    },
+    quantidadePessoas: (dto.orcamento && 'quantidadePessoas' in dto.orcamento) ? (dto.orcamento as any).quantidadePessoas : undefined
+    // Add other properties as needed
   };
 }
 
@@ -158,7 +184,106 @@ export const useEventStore = create<EventStore>()(
       loading: false,
       error: null,
 
-      // Implementação das funções de budget:
+      // Event operations
+      fetchEvents: async () => {
+        set({ loading: true, error: null });
+        try {
+          const eventos = await eventoService.listAllEventos();
+          const events = eventos.map(fromEventDto);
+          set({ events, lastUpdate: Date.now(), loading: false });
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Erro ao carregar eventos', loading: false });
+        }
+      },
+
+      addEvent: async (eventData) => {
+        set({ loading: true, error: null });
+        try {
+          const dto = toEventDto(eventData);
+          const response = await eventoService.createEvento(dto);
+          const newEvent = fromEventDto(response);
+          
+          // Sync client if needed
+          if (eventData.cliente) {
+            await syncClientWithEvent(eventData.cliente, newEvent.id);
+          }
+
+          set(state => ({
+            events: [...state.events, newEvent],
+            lastUpdate: Date.now(),
+            loading: false,
+          }));
+          
+          return newEvent;
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Erro ao criar evento', loading: false });
+          throw error;
+        }
+      },
+
+      updateEvent: async (eventId, updatedEvent) => {
+        set({ loading: true, error: null });
+        try {
+          const existingEvent = get().events.find(e => e.id === eventId);
+          if (!existingEvent) {
+            throw new Error('Evento não encontrado');
+          }
+
+          const dto = toEventDto({ ...existingEvent, ...updatedEvent });
+          const response = await eventoService.updateEvento(parseInt(eventId), dto);
+          const updated = fromEventDto(response);
+
+          set(state => ({
+            events: state.events.map(e => e.id === eventId ? updated : e),
+            lastUpdate: Date.now(),
+            loading: false,
+          }));
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Erro ao atualizar evento', loading: false });
+          throw error;
+        }
+      },
+
+      deleteEvent: async (eventId) => {
+        set({ loading: true, error: null });
+        try {
+          await eventoService.deleteEvento(parseInt(eventId));
+          set(state => ({
+            events: state.events.filter(e => e.id !== eventId),
+            lastUpdate: Date.now(),
+            loading: false,
+          }));
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Erro ao deletar evento', loading: false });
+          throw error;
+        }
+      },
+
+      addTransaction: async (eventId, transactionData) => {
+        set({ loading: true, error: null });
+        try {
+          const newTransaction: Transaction = {
+            ...transactionData,
+            id: Date.now().toString(),
+            date: new Date(),
+          };
+
+          set(state => ({
+            events: state.events.map(e => 
+              e.id === eventId 
+                ? { ...e, transactions: [...e.transactions, newTransaction] } 
+                : e
+            ),
+            lastUpdate: Date.now(),
+            loading: false,
+          }));
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : 'Erro ao adicionar transação', loading: false });
+          throw error;
+        }
+      },
+
+      // Budget operations (same as before)
       fetchBudgets: async () => {
         set({ loading: true, error: null });
         try {
@@ -170,10 +295,10 @@ export const useEventStore = create<EventStore>()(
         }
       },
 
-      createBudget: async (budget) => {
+      createBudget: async (budgetData) => {
         set({ loading: true, error: null });
         try {
-          const payload = toOrcamentoPayload(budget);
+          const payload = toOrcamentoPayload(budgetData);
           const response = await orcamentosService.enviarOrcamento(payload);
           const newBudget = toBudget(response);
           
@@ -182,6 +307,8 @@ export const useEventStore = create<EventStore>()(
             lastUpdate: Date.now(),
             loading: false,
           }));
+          
+          return newBudget;
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'Erro ao criar orçamento', loading: false });
           throw error;
@@ -189,14 +316,22 @@ export const useEventStore = create<EventStore>()(
       },
 
       getBudget: async (id) => {
-        // Como seu serviço atual não tem GET por ID, vamos buscar localmente
-        return get().budgets.find(b => b.id === id);
+        try {
+          const response = await orcamentosService.getOrcamentoById(Number(id));
+          if (response !== null && response !== undefined) {
+            return toBudget(response);
+          }
+          return undefined;
+        } catch (error) {
+          // Fallback to local storage if API fails
+          return get().budgets.find(b => b.id === id);
+        }
       },
 
-      updateBudget: async (id, budget) => {
+      updateBudget: async (id, budgetData) => {
         set({ loading: true, error: null });
         try {
-          const payload = toOrcamentoPayload(budget);
+          const payload = toOrcamentoPayload(budgetData);
           const response = await orcamentosService.atualizarOrcamento(Number(id), payload);
           const updatedBudget = toBudget(response);
           
@@ -214,10 +349,7 @@ export const useEventStore = create<EventStore>()(
       updateBudgetStatus: async (id, status) => {
         set({ loading: true, error: null });
         try {
-          const apiStatus = status === 'accepted' ? 'ACEITO' : 
-                          status === 'rejected' ? 'RECUSADO' : 'PENDENTE';
-          
-          const response = await orcamentosService.atualizarStatusOrcamento(Number(id), apiStatus);
+          const response = await orcamentosService.atualizarStatusOrcamento(Number(id), status);
           const updatedBudget = toBudget(response);
           
           set(state => ({
@@ -246,105 +378,87 @@ export const useEventStore = create<EventStore>()(
         }
       },
 
-      // Implemente as outras funções obrigatórias da interface
-
-      addEvent: (event) => {
-        set(state => ({
-          events: [...state.events, event],
-          lastUpdate: Date.now(),
-        }));
-      },
-
-      updateEvent: (eventId, updatedEvent) => {
-        set(state => ({
-          events: state.events.map(e => e.id === eventId ? updatedEvent : e),
-          lastUpdate: Date.now(),
-        }));
-      },
-
-      addTransaction: (eventId, transaction) => {
-        set(state => ({
-          events: state.events.map(e =>
-            e.id === eventId
-              ? { ...e, transactions: [...e.transactions, transaction] }
-              : e
-          ),
-          lastUpdate: Date.now(),
-        }));
-      },
-
-      getEvent: (eventId) => {
-        return get().events.find(e => e.id === eventId);
-      },
-
+      // Balance operations (same as before)
       getEventBalance: (eventId) => {
         const event = get().events.find(e => e.id === eventId);
         if (!event) return { budget: 0, expenses: 0, total: 0 };
+        
         const budget = event.transactions
           .filter(t => t.type === "budget")
           .reduce((sum, t) => sum + t.amount, 0);
+          
         const expenses = event.transactions
           .filter(t => t.type === "expense")
           .reduce((sum, t) => sum + t.amount, 0);
+          
         return { budget, expenses, total: budget - expenses };
       },
 
       getAllEventsBalance: () => {
         const events = get().events;
         let budget = 0, expenses = 0;
+        
         events.forEach(event => {
           budget += event.transactions
             .filter(t => t.type === "budget")
             .reduce((sum, t) => sum + t.amount, 0);
+            
           expenses += event.transactions
             .filter(t => t.type === "expense")
             .reduce((sum, t) => sum + t.amount, 0);
         });
+        
         return { budget, expenses, total: budget - expenses };
       },
 
       getEventSources: (eventId) => {
         const event = get().events.find(e => e.id === eventId);
         if (!event) return [];
+        
         const sources = new Set<string>();
         event.transactions.forEach(t => {
           if (t.source) sources.add(t.source);
         });
+        
         return Array.from(sources);
       },
 
       getSourceBalance: (eventId, source) => {
         const event = get().events.find(e => e.id === eventId);
         if (!event) return { source, available: 0, total: 0, spent: 0 };
+        
         const total = event.transactions
           .filter(t => t.type === "budget" && t.source === source)
           .reduce((sum, t) => sum + t.amount, 0);
+          
         const spent = event.transactions
           .filter(t => t.type === "expense" && t.source === source)
           .reduce((sum, t) => sum + t.amount, 0);
+          
         return { source, available: total - spent, total, spent };
       },
 
       getAllSourcesBalances: (eventId) => {
-        const event = get().events.find(e => e.id === eventId);
-        if (!event) return [];
-        const sources = new Set<string>();
-        event.transactions.forEach(t => {
-          if (t.source) sources.add(t.source);
-        });
-        return Array.from(sources).map(source =>
-          get().getSourceBalance(eventId, source)
-        );
+        const sources = get().getEventSources(eventId);
+        return sources.map(source => get().getSourceBalance(eventId, source));
       },
 
       canSpendFromSource: (eventId, source, amount) => {
         const balance = get().getSourceBalance(eventId, source);
         return balance.available >= amount;
       },
+
+      getEvent: (eventId) => {
+        return get().events.find(e => e.id === eventId);
+      },
     }),
     {
       name: "event-storage",
-      // ... (configuração de persistência)
+      partialize: (state) => ({
+        events: state.events,
+        budgets: state.budgets,
+        lastUpdate: state.lastUpdate,
+      }),
     }
   )
 );

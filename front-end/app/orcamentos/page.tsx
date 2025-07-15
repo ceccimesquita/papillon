@@ -32,7 +32,7 @@ export default function BudgetsPage() {
   }
 
   if (error) {
-    return (
+    return (  
       <div className="container max-w-full mx-auto px-4 py-6 md:px-6 md:py-8">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
           <strong className="font-bold">Erro!</strong>
@@ -54,14 +54,14 @@ export default function BudgetsPage() {
         </Link>
       </div>
 
-      <Tabs defaultValue="pending" className="space-y-6">
+      <Tabs defaultValue="PENDENTE" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="pending">Pendentes ({pendingBudgets.length})</TabsTrigger>
-          <TabsTrigger value="accepted">Aceitos ({acceptedBudgets.length})</TabsTrigger>
-          <TabsTrigger value="rejected">Rejeitados ({rejectedBudgets.length})</TabsTrigger>
+          <TabsTrigger value="PENDENTE">Pendentes ({pendingBudgets.length})</TabsTrigger>
+          <TabsTrigger value="ACEITO">Aceitos ({acceptedBudgets.length})</TabsTrigger>
+          <TabsTrigger value="REJEITADO">Rejeitados ({rejectedBudgets.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="pending" className="mt-0">
+        <TabsContent value="PENDENTE" className="mt-0">
           <Card className="overflow-hidden">
             <CardHeader className="bg-muted/50 pb-4">
               <CardTitle>Orçamentos Pendentes</CardTitle>
@@ -73,7 +73,7 @@ export default function BudgetsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="accepted" className="mt-0">
+        <TabsContent value="ACEITO" className="mt-0">
           <Card className="overflow-hidden">
             <CardHeader className="bg-muted/50 pb-4">
               <CardTitle>Orçamentos Aceitos</CardTitle>
@@ -85,7 +85,7 @@ export default function BudgetsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="rejected" className="mt-0">
+        <TabsContent value="REJEITADO" className="mt-0">
           <Card className="overflow-hidden">
             <CardHeader className="bg-muted/50 pb-4">
               <CardTitle>Orçamentos Rejeitados</CardTitle>

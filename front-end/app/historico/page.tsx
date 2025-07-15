@@ -6,19 +6,9 @@ import { EventList } from "@/components/event-list"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { isPast, isToday } from "date-fns"
 
 export default function HistoricoPage() {
-  const { events } = useEventStore()
 
-  // Filtrar apenas eventos passados
-  const pastEvents = events.filter((event) => {
-    const eventDate = new Date(event.date)
-    return isPast(eventDate) && !isToday(eventDate)
-  })
-
-  // Ordenar eventos por data (mais recentes primeiro)
-  const sortedEvents = [...pastEvents].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   return (
     <div className="container max-w-screen-2xl mx-auto px-4 py-6 md:px-6 md:py-8">
@@ -38,7 +28,7 @@ export default function HistoricoPage() {
           <CardDescription>Histórico de eventos já realizados.</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <EventList eventsToShow={sortedEvents} showPastEvents={true} />
+          <EventList />
         </CardContent>
       </Card>
     </div>

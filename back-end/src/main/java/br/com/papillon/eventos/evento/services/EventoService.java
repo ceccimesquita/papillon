@@ -9,6 +9,7 @@ import br.com.papillon.eventos.cliente.entities.Cliente;
 import br.com.papillon.eventos.cliente.repositories.ClienteRepository;
 import br.com.papillon.eventos.orcamento.entities.Orcamento;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import br.com.papillon.eventos.evento.dtos.EventoCreateDto;
@@ -20,6 +21,8 @@ import br.com.papillon.eventos.evento.repositories.EventoRepository;
 import br.com.papillon.eventos.funcionario.entities.Funcionario;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 
@@ -41,14 +44,12 @@ public class EventoService {
 
         Evento salvo = eventoRepository.save(novo);
         // não há insumos nem funcionários ainda, mas vamos garantir
-        recalcularGastosELucro(salvo);
         return new EventoShowDto(salvo);
     }
 
     public List<EventoShowDto> listAllEventos() {
-        return eventoRepository.findAll()
+        return eventoRepository.findAllByOrderByDataDesc()
                 .stream()
-                .peek(this::recalcularGastosELucro)   // recalcula antes de mapear
                 .map(EventoShowDto::new)
                 .collect(Collectors.toList());
     }
@@ -56,7 +57,6 @@ public class EventoService {
     public EventoShowDto getEventoById(Long id) {
         Evento ev = eventoRepository.findById(id)
                 .orElseThrow(() -> new EventoNotFoundException(id));
-        recalcularGastosELucro(ev);
         return new EventoShowDto(ev);
     }
 
@@ -80,7 +80,6 @@ public class EventoService {
         existente.setValor(dto.valor());
 
         Evento salvo = eventoRepository.save(existente);
-        recalcularGastosELucro(salvo);
         return new EventoShowDto(salvo);
     }
 
@@ -91,9 +90,11 @@ public class EventoService {
                 orc.getCliente().getId(),
                 orc.getDataDoEvento(),
                 orc.getValorTotal(),
-                "Em andamento"
+                "PENDENTE"
         );
         Evento novo = new Evento(dto, orc.getCliente());
+
+        novo.setQtdPessoas(orc.getQuantidadePessoas());
 
         novo.setFuncionarios(
             orc.getFuncionarios().stream()
@@ -110,7 +111,6 @@ public class EventoService {
         novo.setLucro(BigDecimal.ZERO);
 
         Evento salvo = eventoRepository.save(novo);
-        recalcularGastosELucro(salvo);
         return new EventoShowDto(salvo);
     }
 
@@ -120,9 +120,12 @@ public class EventoService {
         eventoRepository.deleteById(id);
     }
 
-    // --------------------------------------------------------
-    private void recalcularGastosELucro(Evento evento) {
-        return;
+    public void atualizarStatus(Long id, String novoStatus) {
+    Evento evento = eventoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Evento não encontrado"));
+        evento.setStatus(novoStatus);
+        eventoRepository.save(evento);
     }
+
 }
 
