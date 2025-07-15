@@ -1,8 +1,8 @@
 package br.com.papillon.eventos.orcamento.dtos;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 import br.com.papillon.eventos.cardapios.entities.Cardapio;
 import br.com.papillon.eventos.cliente.dtos.ClienteDto;
@@ -12,12 +12,12 @@ import br.com.papillon.eventos.orcamento.entities.Orcamento;
 public record OrcamentoShowDto(
         Long id,
         ClienteDto cliente,
-        LocalDate dataDoEvento,
+        long dataDoEvento,
         Integer quantidadePessoas,
         BigDecimal valorPorPessoa,
         BigDecimal valorTotal,
-        LocalDate dataGeracao,
-        LocalDate dataLimite,
+        long dataGeracao,
+        long dataLimite,
         String status,
         List<Funcionario> funcionarios,
         List<Cardapio> cardapios
@@ -26,12 +26,12 @@ public record OrcamentoShowDto(
         this(
                 o.getId(),
                 new ClienteDto(o.getCliente()),
-                o.getDataDoEvento(),
+                Timestamp.valueOf(o.getDataDoEvento().atStartOfDay()).getTime(),
                 o.getQuantidadePessoas(),
                 o.getValorPorPessoa(),
                 o.getValorTotal(),
-                o.getDataGeracao(),
-                o.getDataLimite(),
+                Timestamp.valueOf(o.getDataGeracao().atStartOfDay()).getTime(),
+                Timestamp.valueOf(o.getDataLimite().atStartOfDay()).getTime(),
                 o.getStatus().name(),
                 o.getFuncionarios(),
                 o.getCardapios()

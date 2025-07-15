@@ -117,30 +117,6 @@ export default function EventPage() {
         </div>
 
         <div className="flex gap-2">
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9">
-                <Settings className="mr-2 h-4 w-4" />
-                Editar Evento
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Editar Evento</DialogTitle>
-              </DialogHeader>
-              <EditEventForm
-                eventId={eventId}
-                onSuccess={() => {
-                  setEditOpen(false)
-                  setRefreshKey((prev) => prev + 1)
-                  toast({
-                    title: "Evento atualizado",
-                    description: "As informações do evento foram atualizadas com sucesso.",
-                  })
-                }}
-              />
-            </DialogContent>
-          </Dialog>
 
           <Dialog open={paymentMethodsOpen} onOpenChange={setPaymentMethodsOpen}>
             <DialogTrigger asChild>
@@ -284,56 +260,76 @@ export default function EventPage() {
         </TabsList>
 
         <TabsContent value="pratos" className="mt-4">
-          {event.cardapios.filter(menu => menu.tipo === "prato").length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Descrição</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {event.cardapios
-                    .filter(menu => menu.tipo === "prato")
-                    .map((menu, index) => (
-                      <TableRow key={`prato-${index}`}>
-                        <TableCell className="font-medium">{menu.nome}</TableCell>
-                        <TableCell>{menu.descricao || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+          {event.cardapios.some(menu => 
+            menu.itens.some(item => item.tipo === "prato")
+          ) ? (
+            <div className="space-y-6">
+              {event.cardapios.map((cardapio, cardapioIndex) => {
+                const pratos = cardapio.itens.filter(item => item.tipo === "prato");
+                return pratos.length > 0 ? (
+                  <div key={`pratos-${cardapioIndex}`}>
+                    <h3 className="text-lg font-medium mb-2">{cardapio.nome}</h3>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Descrição</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pratos.map((prato, index) => (
+                            <TableRow key={`prato-${cardapioIndex}-${index}`}>
+                              <TableCell className="font-medium">{prato.nome}</TableCell>
+                              <TableCell>{prato.descricao || '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ) : null;
+              })}
             </div>
           ) : (
-            <p className="text-muted-foreground">Nenhum prato cadastrado.</p>
+            <p className="text-muted-foreground">Nenhum prato cadastrado nos cardápios.</p>
           )}
         </TabsContent>
 
         <TabsContent value="bebidas" className="mt-4">
-          {event.cardapios.filter(menu => menu.tipo === "bebida").length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Descrição</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {event.cardapios
-                    .filter(menu => menu.tipo === "bebida")
-                    .map((menu, index) => (
-                      <TableRow key={`bebida-${index}`}>
-                        <TableCell className="font-medium">{menu.nome}</TableCell>
-                        <TableCell>{menu.descricao || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+          {event.cardapios.some(menu => 
+            menu.itens.some(item => item.tipo === "bebida")
+          ) ? (
+            <div className="space-y-6">
+              {event.cardapios.map((cardapio, cardapioIndex) => {
+                const bebidas = cardapio.itens.filter(item => item.tipo === "bebida");
+                return bebidas.length > 0 ? (
+                  <div key={`bebidas-${cardapioIndex}`}>
+                    <h3 className="text-lg font-medium mb-2">{cardapio.nome}</h3>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead>Descrição</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {bebidas.map((bebida, index) => (
+                            <TableRow key={`bebida-${cardapioIndex}-${index}`}>
+                              <TableCell className="font-medium">{bebida.nome}</TableCell>
+                              <TableCell>{bebida.descricao || '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ) : null;
+              })}
             </div>
           ) : (
-            <p className="text-muted-foreground">Nenhuma bebida cadastrada.</p>
+            <p className="text-muted-foreground">Nenhuma bebida cadastrada nos cardápios.</p>
           )}
         </TabsContent>
       </Tabs>
