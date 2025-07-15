@@ -8,6 +8,7 @@ import br.com.papillon.eventos.cardapios.entities.Cardapio;
 import br.com.papillon.eventos.cliente.dtos.ClienteDto;
 import br.com.papillon.eventos.funcionario.entities.Funcionario;
 import br.com.papillon.eventos.orcamento.entities.Orcamento;
+import br.com.papillon.eventos.orcamento.entities.OrcamentoStatus;
 
 public record OrcamentoShowDto(
         Long id,
@@ -18,7 +19,7 @@ public record OrcamentoShowDto(
         BigDecimal valorTotal,
         long dataGeracao,
         long dataLimite,
-        String status,
+        String   status,
         List<Funcionario> funcionarios,
         List<Cardapio> cardapios
 ) {

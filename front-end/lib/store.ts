@@ -4,18 +4,15 @@ import { syncClientWithEvent } from "./client-store";
 import * as orcamentosService from "./api/orcamentosService";
 import * as eventoService from "./api/eventoService"; // Import the evento service
 
-// Interfaces
-export interface Transaction {
-  id: string;
-  description: string;
-  amount: number;
-  type: "expense" | "budget";
-  source: string | null;
-  destination: string | null;
-  date: Date;
-}
 
 export type EventStatus = "pending" | "confirmed" | "canceled" | "completed";
+
+export interface Insumo {
+  id: string;
+  nome: string;
+  valor: number;
+  eventoId: string;
+}
 
 export interface Client {
   id?: string;
@@ -63,12 +60,13 @@ export interface Event {
   nome: string;
   data: any;
   initialValue: number;
-  transactions: Transaction[];
+  transactions: Insumo[];
   status: EventStatus;
   cliente: Client;
-  quantidadePessoas?: number;
+  qtdPessoas?: number;
   funcionarios?: Person[];
   cardapios?: Menu[];
+  valor?: number; // Optional field for event value
 }
 
 interface Balance {
@@ -97,7 +95,7 @@ interface EventStore {
   updateEvent: (eventId: string, updatedEvent: Partial<Event>) => Promise<void>;
   deleteEvent: (eventId: string) => Promise<void>;
   getEvent: (eventId: string) => Event | undefined;
-  addTransaction: (eventId: string, transaction: Omit<Transaction, 'id'>) => Promise<void>;
+  addTransaction: (eventId: string, transaction: Omit<Insumo, 'id'>) => Promise<void>;
   
   // Budget operations
   fetchBudgets: () => Promise<void>;
@@ -170,7 +168,8 @@ function fromEventDto(dto: eventoService.EventoShowDto): Event {
       nome: dto.cliente.nome, 
       email: dto.cliente.email,
     },
-    quantidadePessoas: (dto.orcamento && 'quantidadePessoas' in dto.orcamento) ? (dto.orcamento as any).quantidadePessoas : undefined
+    qtdPessoas: dto.qtdPessoas,
+    valor: dto.valor,
     // Add other properties as needed
   };
 }
@@ -262,10 +261,9 @@ export const useEventStore = create<EventStore>()(
       addTransaction: async (eventId, transactionData) => {
         set({ loading: true, error: null });
         try {
-          const newTransaction: Transaction = {
+          const newTransaction: Insumo = {
             ...transactionData,
             id: Date.now().toString(),
-            date: new Date(),
           };
 
           set(state => ({
@@ -384,12 +382,10 @@ export const useEventStore = create<EventStore>()(
         if (!event) return { budget: 0, expenses: 0, total: 0 };
         
         const budget = event.transactions
-          .filter(t => t.type === "budget")
-          .reduce((sum, t) => sum + t.amount, 0);
+          .reduce((sum, t) => sum + t.valor, 0);
           
         const expenses = event.transactions
-          .filter(t => t.type === "expense")
-          .reduce((sum, t) => sum + t.amount, 0);
+          .reduce((sum, t) => sum + t.valor, 0);
           
         return { budget, expenses, total: budget - expenses };
       },
@@ -400,12 +396,10 @@ export const useEventStore = create<EventStore>()(
         
         events.forEach(event => {
           budget += event.transactions
-            .filter(t => t.type === "budget")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + t.valor, 0);
             
           expenses += event.transactions
-            .filter(t => t.type === "expense")
-            .reduce((sum, t) => sum + t.amount, 0);
+            .reduce((sum, t) => sum + t.valor, 0);
         });
         
         return { budget, expenses, total: budget - expenses };
@@ -417,7 +411,9 @@ export const useEventStore = create<EventStore>()(
         
         const sources = new Set<string>();
         event.transactions.forEach(t => {
-          if (t.source) sources.add(t.source);
+          if (t.nome) {
+            sources.add(t.nome);
+          }
         });
         
         return Array.from(sources);
@@ -428,12 +424,10 @@ export const useEventStore = create<EventStore>()(
         if (!event) return { source, available: 0, total: 0, spent: 0 };
         
         const total = event.transactions
-          .filter(t => t.type === "budget" && t.source === source)
-          .reduce((sum, t) => sum + t.amount, 0);
+          .reduce((sum, t) => sum + t.valor, 0);
           
         const spent = event.transactions
-          .filter(t => t.type === "expense" && t.source === source)
-          .reduce((sum, t) => sum + t.amount, 0);
+          .reduce((sum, t) => sum + t.valor, 0);
           
         return { source, available: total - spent, total, spent };
       },

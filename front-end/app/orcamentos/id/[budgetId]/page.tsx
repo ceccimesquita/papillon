@@ -99,9 +99,9 @@ export default function BudgetDetailPage() {
         description: "O orçamento foi marcado como aceito com sucesso.",
       })
       
-      if (budget.eventId) {
-        router.push(`/`)
-      }
+      
+      router.push(`/`)
+      
     } catch (error) {
       toast({
         title: "Erro",
@@ -121,7 +121,7 @@ export default function BudgetDetailPage() {
         description: "O orçamento foi marcado como rejeitado.",
       })
 
-      router.push(`/`)
+      router.push(`/`)  
     } catch (error) {
       toast({
         title: "Erro",
